@@ -397,6 +397,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -422,40 +423,44 @@
             <div class="collapse navbar-collapse" id="navbarMain">
                 <ul class="navbar-nav ms-auto align-items-center">
                     {% if current_user.is_authenticated %}
-                        <!-- Notification Bell - FIXED VERSION -->
                         <li class="nav-item">
-                            <div class="notification-wrapper">
-                                <button class="notification-bell" id="notificationBell">
+                            <div class="notification-wrapper" id="notificationWrapper">
+                                <button class="notification-bell" id="notificationBell" aria-label="Open notifications">
                                     <i class="fas fa-bell"></i>
-                                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                                    <span class="notification-badge" id="notificationBadge" {% if notification_unread_count == 0 %}style="display:none"{% endif %}>{{ notification_unread_count }}</span>
                                 </button>
-                              <!-- In base.html, ensure this notification panel exists -->
-<div class="notification-wrapper">
-    <button class="notification-bell" id="notificationBell">
-        <i class="fas fa-bell"></i>
-        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
-    </button>
-    
-    <!-- Notification Dropdown Panel -->
-    <div class="notification-panel" id="notificationPanel">
-        <div class="notification-header">
-            <h6><i class="fas fa-bell me-2"></i>Notifications</h6>
-            <button id="markAllReadBtn">Mark all read</button>
-        </div>
-        <div class="notification-list" id="notificationList">
-            <div class="text-center py-4 text-muted">
-                <i class="fas fa-bell-slash fa-2x mb-2"></i>
-                <p class="mb-0">No notifications</p>
-            </div>
-        </div>
-        <div class="notification-footer">
-            <a href="{{ url_for('public.notifications') }}">View all notifications <i class="fas fa-arrow-right ms-1"></i></a>
-        </div>
-    </div>
-</div>
+
+                                <div class="notification-panel" id="notificationPanel">
+                                    <div class="notification-header">
+                                        <h6><i class="fas fa-bell me-2"></i>Notifications</h6>
+                                        <button id="markAllReadBtn" type="button">Mark all read</button>
+                                    </div>
+                                    <div class="notification-list" id="notificationList">
+                                        {% for n in notification_latest %}
+                                        <a class="notification-item text-decoration-none text-reset" href="{{ url_for('notifications.notification_detail', notification_id=n.id) }}">
+                                            <div class="notification-icon general"><i class="fas fa-bell"></i></div>
+                                            <div class="notification-content">
+                                                <div class="notification-title">{{ n.title }}</div>
+                                                <div class="notification-message">{{ n.preview(80) }}</div>
+                                                <div class="notification-meta">
+                                                    <span class="notification-time"><i class="far fa-clock"></i>{{ n.created_at.strftime('%d %b, %I:%M %p') }}</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        {% else %}
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                                            <p class="mb-0">No notifications</p>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="notification-footer">
+                                        <a href="{{ url_for('notifications.notifications_page') }}">View all notifications <i class="fas fa-arrow-right ms-1"></i></a>
+                                    </div>
+                                </div>
                             </div>
                         </li>
-                        
+
                         <!-- User Dropdown -->
                         <li class="nav-item dropdown ms-2">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
@@ -528,139 +533,7 @@
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
     
-<!-- In base.html or wherever your bell icon JavaScript is -->
-
-<script>
-// =====================================================
-// FIXED NOTIFICATION SYSTEM
-// =====================================================
-$(document).ready(function() {
-    console.log('✅ Notification system initialized');
-    
-    if ($('#notificationBell').length > 0) {
-        loadPublicNotifications();
-        setInterval(loadPublicNotifications, 30000); // Refresh every 30 seconds
-        
-        $('#notificationBell').on('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $('#notificationPanel').toggleClass('show');
-            loadPublicNotifications(); // Refresh when opened
-        });
-        
-        $('#markAllReadBtn').on('click', function() {
-            $('#notificationBadge').hide();
-            $('#notificationPanel').removeClass('show');
-            showToast('Notifications marked as viewed');
-        });
-        
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('.notification-wrapper').length) {
-                $('#notificationPanel').removeClass('show');
-            }
-        });
-    }
-});
-
-function loadPublicNotifications() {
-    $('#notificationList').html('<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
-    
-    $.ajax({
-        url: '/api/public/notifications',
-        method: 'GET',
-        dataType: 'json',
-        timeout: 5000,
-        success: function(data) {
-            console.log('📨 Notifications received:', data);
-            
-            if (data.success && data.notifications && data.notifications.length > 0) {
-                $('#notificationBadge').text(data.notifications.length).show();
-                
-                let html = '';
-                data.notifications.forEach(function(n) {
-                    let iconClass = n.icon_class || 'general';
-                    
-                    html += `
-                        <div class="notification-item" onclick="window.location.href='${n.link || '#'}'">
-                            <div class="notification-icon ${iconClass}">
-                                <i class="fas ${n.icon || 'fa-bell'}"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-title">${escapeHtml(n.title)}</div>
-                                <div class="notification-message">${escapeHtml(truncateText(n.message, 80))}</div>
-                                <div class="notification-meta">
-                                    <span class="notification-time">
-                                        <i class="far fa-clock"></i> ${n.time_ago || 'Just now'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                $('#notificationList').html(html);
-            } else {
-                $('#notificationBadge').hide();
-                $('#notificationList').html(`
-                    <div class="text-center p-4 text-muted">
-                        <i class="fas fa-bell-slash fa-3x mb-3"></i>
-                        <h6>No notifications</h6>
-                        <p class="small">Check back later for updates</p>
-                    </div>
-                `);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('❌ Failed to load notifications:', error);
-            console.error('Status:', xhr.status);
-            console.error('Response:', xhr.responseText);
-            
-            $('#notificationBadge').hide();
-            $('#notificationList').html(`
-                <div class="text-center p-3 text-danger">
-                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
-                    <p class="mb-0">Failed to load notifications</p>
-                    <small>${error}</small>
-                </div>
-            `);
-        }
-    });
-}
-
-function truncateText(text, maxLength) {
-    if (!text) return '';
-    if (text.length > maxLength) {
-        return text.substring(0, maxLength) + '...';
-    }
-    return text;
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    var div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showToast(message, type = 'success') {
-    const toast = $(`
-        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
-            <div class="toast align-items-center text-white bg-${type} border-0 show" role="alert">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
-                        ${message}
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            </div>
-        </div>
-    `);
-    
-    $('body').append(toast);
-    setTimeout(() => toast.fadeOut().remove(), 3000);
-}
-</script>
+<script src="{{ url_for('static', filename='js/notifications_dropdown.js') }}"></script>
 
     
     {% block extra_js %}{% endblock %}

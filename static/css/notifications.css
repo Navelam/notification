@@ -1,0 +1,27 @@
+/* Shared notification module styling */
+.notifications-hero,
+.detail-header {
+    background: linear-gradient(120deg, #6f42c1, #9b59b6);
+    border-radius: 16px;
+    color: #fff;
+    box-shadow: 0 10px 30px rgba(111, 66, 193, 0.22);
+}
+
+.notification-card,
+.detail-card {
+    border: none;
+    border-radius: 14px;
+    transition: all 0.25s ease;
+    box-shadow: 0 6px 20px rgba(13, 18, 28, 0.07);
+}
+
+.notification-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(13, 18, 28, 0.12);
+}
+
+.notification-tag {
+    font-size: 0.75rem;
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+}
