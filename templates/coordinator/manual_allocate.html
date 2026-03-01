@@ -1,0 +1,198 @@
+{% extends "coordinator/base_coordinator.html" %}
+
+{% block title %}Manual Allocation - Whole College{% endblock %}
+
+{% block header_title %}Manual Subject Allocation{% endblock %}
+{% block header_subtitle %}Select time for each subject across all departments{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-hand-pointer me-2"></i>Manual Allocation - Whole College</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Academic Year:</strong> {{ academic_year }} | 
+                    <strong>Cycle:</strong> {{ exam_cycle }} |
+                    <strong>Date Range:</strong> {{ start_date }} to {{ end_date }} | 
+                    <strong>Total Subjects:</strong> {{ total_subjects }}
+                </div>
+                
+                <form method="POST" action="{{ url_for('coordinator.manual_allocate') }}" id="manualForm">
+                    <input type="hidden" name="academic_year" value="{{ academic_year }}">
+                    <input type="hidden" name="start_date" value="{{ start_date }}">
+                    <input type="hidden" name="end_date" value="{{ end_date }}">
+                    
+                    <!-- Department tabs in helpers.py order -->
+                    <ul class="nav nav-tabs mb-3" id="deptTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+                                All Subjects ({{ total_subjects }})
+                            </button>
+                        </li>
+                        {% for dept_name, dept_subjects in subjects_by_dept.items() %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="{{ dept_name|replace(' ', '-') }}-tab" data-bs-toggle="tab" data-bs-target="#{{ dept_name|replace(' ', '-') }}" type="button" role="tab">
+                                {{ dept_name }} ({{ dept_subjects|length }})
+                            </button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <div class="tab-content" id="deptTabContent">
+                        <!-- All Subjects Tab -->
+                        <div class="tab-pane fade show active" id="all" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Department</th>
+                                            <th>Semester</th>
+                                            <th>Subject Code</th>
+                                            <th>Subject Name</th>
+                                            <th>Select Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for subject in subjects %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td>{{ subject.department.name }}</td>
+                                            <td>Sem {{ subject.semester_id }}</td>
+                                            <td>{{ subject.code }}</td>
+                                            <td>{{ subject.name }}</td>
+                                            <td>
+                                                <select name="subject_{{ subject.id }}_time" class="form-select subject-time-select" required>
+                                                    <option value="">Select</option>
+                                                    <option value="10AM">10:00 AM</option>
+                                                    <option value="2PM">2:00 PM</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Department Tabs -->
+                        {% for dept_name, dept_subjects in subjects_by_dept.items() %}
+                        <div class="tab-pane fade" id="{{ dept_name|replace(' ', '-') }}" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Semester</th>
+                                            <th>Subject Code</th>
+                                            <th>Subject Name</th>
+                                            <th>Select Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for subject in dept_subjects %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td>Sem {{ subject.semester_id }}</td>
+                                            <td>{{ subject.code }}</td>
+                                            <td>{{ subject.name }}</td>
+                                            <td>
+                                                <select name="subject_{{ subject.id }}_time" class="form-select subject-time-select" required>
+                                                    <option value="">Select</option>
+                                                    <option value="10AM">10:00 AM</option>
+                                                    <option value="2PM">2:00 PM</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="alert alert-warning" id="manualWarning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Please select time for all subjects
+                    </div>
+                    
+                    <div class="progress mb-3" style="height: 30px;">
+                        <div class="progress-bar bg-purple" id="progressBar" role="progressbar" style="width: 0%;">0%</div>
+                    </div>
+                    
+                    <div class="d-flex gap-3 mt-4">
+                        <a href="{{ url_for('coordinator.create_timetable') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </a>
+                        <button type="button" class="btn btn-purple" onclick="validateForm()">
+                            <i class="fas fa-save me-2"></i>Save All Allocations
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateProgress() {
+    const selects = document.querySelectorAll('.subject-time-select');
+    const total = selects.length;
+    let selected = 0;
+    
+    selects.forEach(select => {
+        if (select.value) selected++;
+    });
+    
+    const percentage = Math.round((selected / total) * 100);
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = percentage + '%';
+    progressBar.textContent = percentage + '% (' + selected + '/' + total + ')';
+    
+    if (percentage === 100) {
+        progressBar.classList.remove('bg-purple');
+        progressBar.classList.add('bg-success');
+    } else {
+        progressBar.classList.remove('bg-success');
+        progressBar.classList.add('bg-purple');
+    }
+}
+
+function validateForm() {
+    const selects = document.querySelectorAll('.subject-time-select');
+    let allSelected = true;
+    let selectedCount = 0;
+    
+    selects.forEach(select => {
+        if (!select.value) {
+            allSelected = false;
+        } else {
+            selectedCount++;
+        }
+    });
+    
+    if (allSelected) {
+        if (confirm(`Save ${selectedCount} subject allocations?`)) {
+            document.getElementById('manualForm').submit();
+        }
+    } else {
+        const warning = document.getElementById('manualWarning');
+        warning.style.display = 'block';
+        setTimeout(() => warning.style.display = 'none', 3000);
+    }
+}
+
+// Add event listeners to all selects
+document.querySelectorAll('.subject-time-select').forEach(select => {
+    select.addEventListener('change', updateProgress);
+});
+
+// Initial update
+updateProgress();
+</script>
+{% endblock %}

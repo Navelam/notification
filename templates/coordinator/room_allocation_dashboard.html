@@ -1,0 +1,189 @@
+{% extends "coordinator/base_coordinator.html" %}
+
+{% block title %}Room Allocation Dashboard - SPAS{% endblock %}
+
+{% block header_title %}Room Allocation Dashboard{% endblock %}
+{% block header_subtitle %}Manage exam room allocations{% endblock %}
+
+{% block content %}
+<!-- Clear All Button -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5>Clear All Room Allocations</h5>
+                        <p class="text-muted mb-0">This will delete ALL room allocations for EVERY date.</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#clearAllModal">
+                            <i class="fas fa-trash-alt me-2"></i>Clear Everything
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Room Allocation Options</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <a href="{{ url_for('coordinator.allocate_rooms') }}" class="btn btn-purple btn-lg">
+                                <i class="fas fa-plus-circle me-2"></i>New Room Allocation
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <button class="btn btn-outline-purple btn-lg" type="button" data-bs-toggle="collapse" data-bs-target="#dateList">
+                                <i class="fas fa-list me-2"></i>View Available Dates
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="collapse mt-3" id="dateList">
+                    <div class="card card-body">
+                        <h6>Exam Dates with Timetable:</h6>
+                        <div class="row">
+                            {% for date in exam_dates %}
+                            <div class="col-md-3">
+                                <a href="{{ url_for('coordinator.view_room_allocation', date=date) }}" class="btn btn-sm btn-outline-purple mb-2 w-100">
+                                    {{ date.strftime('%d %b %Y') }}
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Existing Allocations Summary -->
+{% if allocations %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-door-open me-2"></i>Existing Room Allocations</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Session</th>
+                                <th>Rooms Used</th>
+                                <th>Students Allocated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alloc in allocations %}
+                            <tr>
+                                <td>{{ alloc.exam_date.strftime('%d %b %Y') }}</td>
+                                <td>
+                                    <span class="badge {% if alloc.exam_time == '10AM' %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ alloc.exam_time }}
+                                    </span>
+                                </td>
+                                <td>{{ alloc.room_count }} rooms</td>
+                                <td>{{ alloc.student_count or 0 }} students</td>
+                                <td>
+                                    <!-- FIXED: Changed from allocate_rooms to view_room_allocation -->
+                                    <a href="{{ url_for('coordinator.view_room_allocation', date=alloc.exam_date) }}" class="btn btn-sm btn-purple">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" 
+                                            onclick="confirmClear('{{ alloc.exam_date }}', '{{ alloc.exam_date.strftime('%d %b %Y') }}')">
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            No room allocations found. Click "New Room Allocation" to create one.
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Clear All Modal -->
+<div class="modal fade" id="clearAllModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Clear ALL Room Allocations</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-bold">You are about to delete ALL room allocations for EVERY date!</p>
+                <p>This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('coordinator.clear_all_room_allocations') }}">
+                    <button type="submit" class="btn btn-danger">Yes, Delete Everything</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clear Single Date Modal -->
+<div class="modal fade" id="clearModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Clear Room Allocations</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to clear allocations for <strong id="clearDateDisplay"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="clearForm" method="POST" action="">
+                    <button type="submit" class="btn btn-warning">Yes, Clear</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmClear(date, dateDisplay) {
+    document.getElementById('clearDateDisplay').textContent = dateDisplay;
+    document.getElementById('clearForm').action = "/coordinator/clear-room-allocation/" + date;
+    var modal = new bootstrap.Modal(document.getElementById('clearModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - SPAS{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-bell me-2"></i>Notifications</h4>
+                    <span class="badge bg-light text-purple">{{ notifications|length }} Total</span>
+                </div>
+                <div class="card-body">
+                    {% if notifications %}
+                        <div class="list-group">
+                            {% for notification in notifications %}
+                            <div class="list-group-item list-group-item-action border-start border-4" 
+                                 style="border-left-color: {{ notification.get_color() }} !important;">
+                                <div class="d-flex w-100 justify-content-between align-items-start">
+                                    <div class="d-flex">
+                                        <div class="me-3">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                                 style="width: 45px; height: 45px; background: {{ notification.get_color() }}20; color: {{ notification.get_color() }};">
+                                                <i class="{{ notification.get_icon() }} fa-lg"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-1">{{ notification.get_prefixed_title() }}</h5>
+                                            <p class="mb-1 text-muted">{{ notification.get_prefixed_message() }}</p>
+                                            <div class="d-flex gap-3 mt-2">
+                                                <small class="text-muted">
+                                                    <i class="far fa-calendar-alt me-1"></i>
+                                                    {{ notification.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                                                </small>
+                                                <small class="text-muted">
+                                                    <i class="far fa-clock me-1"></i>
+                                                    Valid: {{ notification.start_date.strftime('%d-%m-%Y') }} to {{ notification.end_date.strftime('%d-%m-%Y') }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="badge" style="background: {{ notification.get_color() }}20; color: {{ notification.get_color() }};">
+                                            {{ notification.notification_type|title }}
+                                        </span>
+                                        {% if notification.target_role %}
+                                        <span class="badge bg-secondary ms-1">
+                                            {% if notification.target_role == 'all' %}
+                                                Everyone
+                                            {% elif notification.target_role == 'students' %}
+                                                Students
+                                            {% elif notification.target_role == 'teachers' %}
+                                                Teachers
+                                            {% elif notification.target_role == 'hod' %}
+                                                HODs
+                                            {% elif notification.target_role == 'coordinator' %}
+                                                Coordinators
+                                            {% elif notification.target_role == 'principal' %}
+                                                Principal
+                                            {% elif notification.target_role == 'public' %}
+                                                Public
+                                            {% else %}
+                                                {{ notification.target_role|title }}
+                                            {% endif %}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-bell-slash fa-4x text-muted"></i>
+                            </div>
+                            <h5 class="text-muted">No Notifications</h5>
+                            <p class="text-muted">You don't have any notifications at the moment.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Back to Dashboard Button -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for(current_user.role + '.dashboard') if current_user.is_authenticated else url_for('home') }}" 
+                   class="btn btn-outline-purple">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.list-group-item {
+    transition: all 0.3s;
+    margin-bottom: 5px;
+    border-radius: 8px !important;
+}
+.list-group-item:hover {
+    transform: translateX(5px);
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

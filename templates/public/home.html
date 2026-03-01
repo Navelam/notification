@@ -1,0 +1,235 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}Home - SPAS{% endblock %}
+
+{% block page_title %}Welcome to SPAS{% endblock %}
+{% block page_subtitle %}Student Performance Analysis System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <div class="hero-section p-5 bg-light rounded-4">
+                <i class="fas fa-graduation-cap fa-4x text-purple mb-4"></i>
+                <h1 class="display-4 fw-bold mb-3">Student Performance Analysis System</h1>
+                <p class="lead text-muted mb-4">A comprehensive platform for managing student performance, exams, and academic records.</p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{{ url_for('public.timetable') }}" class="btn btn-purple btn-lg">
+                        <i class="fas fa-calendar-alt me-2"></i>View Exam Timetable
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-purple btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-calendar-check fa-3x text-purple"></i>
+                    </div>
+                    <h4 class="card-title h5">Exam Timetable</h4>
+                    <p class="card-text text-muted">View complete exam schedules for all departments and semesters. Updated in real-time.</p>
+                    <a href="{{ url_for('public.timetable') }}" class="btn btn-sm btn-outline-purple">View Schedule</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-chart-line fa-3x text-purple"></i>
+                    </div>
+                    <h4 class="card-title h5">Performance Tracking</h4>
+                    <p class="card-text text-muted">Track student performance with detailed analytics and risk assessment.</p>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-purple">Learn More</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-bell fa-3x text-purple"></i>
+                    </div>
+                    <h4 class="card-title h5">Notifications</h4>
+                    <p class="card-text text-muted">Stay updated with latest announcements and exam schedules.</p>
+                    <a href="{{ url_for('public.notifications') }}" class="btn btn-sm btn-outline-purple">View Notifications</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="text-center mb-4">Quick Statistics</h3>
+                    <div class="row g-4">
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="stat-card text-center">
+                                <div class="stat-value h2 text-purple mb-2">{{ total_departments|default('4') }}</div>
+                                <div class="stat-label text-muted">Departments</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="stat-card text-center">
+                                <div class="stat-value h2 text-purple mb-2">{{ total_courses|default('12') }}</div>
+                                <div class="stat-label text-muted">Courses</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="stat-card text-center">
+                                <div class="stat-value h2 text-purple mb-2">{{ total_students|default('500+') }}</div>
+                                <div class="stat-label text-muted">Students</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="stat-card text-center">
+                                <div class="stat-value h2 text-purple mb-2">{{ upcoming_exams|default('8') }}</div>
+                                <div class="stat-label text-muted">Upcoming Exams</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest Updates -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h4><i class="fas fa-clock me-2 text-purple"></i>Upcoming Exams</h4>
+                </div>
+                <div class="card-body p-4">
+                    {% if upcoming_exam_list %}
+                        <div class="list-group list-group-flush">
+                            {% for exam in upcoming_exam_list %}
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ exam.subject_name }}</h6>
+                                        <small class="text-muted">{{ exam.department }} - Sem {{ exam.semester }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-purple">{{ exam.date }}</span>
+                                        <small class="d-block text-muted">{{ exam.time }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('public.timetable') }}" class="btn btn-sm btn-outline-purple">View Full Timetable</a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">No upcoming exams scheduled</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h4><i class="fas fa-bullhorn me-2 text-purple"></i>Announcements</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="announcement-list">
+                        <div class="announcement-item mb-3">
+                            <h6 class="mb-1">Exam Schedule Published</h6>
+                            <p class="text-muted small mb-2">The exam timetable for Semester 6 has been published. Check the timetable page for details.</p>
+                            <small class="text-purple">2 days ago</small>
+                        </div>
+                        <div class="announcement-item mb-3">
+                            <h6 class="mb-1">New Academic Year</h6>
+                            <p class="text-muted small mb-2">Academic year 2025-2026 has started. Welcome all students!</p>
+                            <small class="text-purple">1 week ago</small>
+                        </div>
+                        <div class="announcement-item">
+                            <h6 class="mb-1">System Maintenance</h6>
+                            <p class="text-muted small mb-2">Scheduled maintenance on Sunday, 10 PM to 2 AM.</p>
+                            <small class="text-purple">2 weeks ago</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border: 1px solid #e9ecef;
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        margin: 0 auto;
+        background: #f3e9ff;
+        border-radius: 50%;
+        color: #6f42c1;
+    }
+    
+    .stat-card {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        transition: transform 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.1);
+    }
+    
+    .announcement-item {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .announcement-item:last-child {
+        border-bottom: none;
+    }
+    
+    .btn-purple {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border: none;
+        transition: all 0.3s;
+    }
+    
+    .btn-purple:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.3);
+    }
+    
+    .btn-outline-purple {
+        border: 2px solid #6f42c1;
+        color: #6f42c1;
+        background: transparent;
+        transition: all 0.3s;
+    }
+    
+    .btn-outline-purple:hover {
+        background: #6f42c1;
+        color: white;
+    }
+</style>
+{% endblock %}

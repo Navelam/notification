@@ -1,0 +1,520 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}Edit Marks - {{ student.name }}{% endblock %}
+
+{% block header_title %}Edit Student Marks{% endblock %}
+{% block header_subtitle %}{{ subject.name }} ({{ subject.code }}){% endblock %}
+
+{% block extra_css %}
+<style>
+    .edit-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .student-info-card {
+        background: linear-gradient(135deg, #f3e9ff, #ffffff);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .student-photo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        color: white;
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    
+    .info-row {
+        display: flex;
+        margin-bottom: 10px;
+        padding: 8px;
+        border-bottom: 1px dashed #e9ecef;
+    }
+    
+    .info-label {
+        width: 150px;
+        font-weight: 600;
+        color: #6f42c1;
+    }
+    
+    .info-value {
+        flex: 1;
+        color: #2c3e50;
+    }
+    
+    .current-values {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .current-title {
+        color: #6f42c1;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .value-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .value-item {
+        text-align: center;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .value-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    
+    .value-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #6f42c1;
+    }
+    
+    .edit-section {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .section-title {
+        color: #6f42c1;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f3e9ff;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .form-label i {
+        color: #6f42c1;
+        margin-right: 5px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+        border-color: #6f42c1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+    }
+    
+    .form-control.error {
+        border-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .readonly-field {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px;
+        color: #6c757d;
+    }
+    
+    .live-preview {
+        background: #f3e9ff;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 25px;
+    }
+    
+    .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+    }
+    
+    .preview-item {
+        text-align: center;
+    }
+    
+    .preview-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    
+    .preview-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #6f42c1;
+    }
+    
+    .grade-badge {
+        display: inline-block;
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-weight: 700;
+    }
+    
+    .grade-aplus { background: #6f42c1; color: white; }
+    .grade-a { background: #9b59b6; color: white; }
+    .grade-b { background: #3498db; color: white; }
+    .grade-c { background: #f1c40f; color: #2c3e50; }
+    .grade-d { background: #e74c3c; color: white; }
+    
+    .risk-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .risk-critical { background: #dc3545; color: white; animation: pulse 2s infinite; }
+    .risk-average { background: #ffc107; color: #2c3e50; }
+    .risk-safe { background: #28a745; color: white; }
+    .risk-best { background: #6f42c1; color: white; }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    .btn-update {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        padding: 12px 40px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+    }
+    
+    .btn-update:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-container">
+    <!-- Student Info Card -->
+    <div class="student-info-card">
+        <div class="student-photo">
+            {{ student.name[0] }}
+        </div>
+        <h4 class="text-center mb-4">{{ student.name }}</h4>
+        
+        <div class="info-row">
+            <div class="info-label">Student ID</div>
+            <div class="info-value">{{ student.student_id }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Registration No</div>
+            <div class="info-value">{{ student.registration_number }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Course</div>
+            <div class="info-value">{{ student.course.name }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Semester</div>
+            <div class="info-value">{{ student.current_semester }}</div>
+        </div>
+    </div>
+    
+    <!-- Current Values Display -->
+    <div class="current-values">
+        <div class="current-title">📊 Current Saved Values</div>
+        <div class="value-grid">
+            <div class="value-item">
+                <div class="value-label">Total Classes</div>
+                <div class="value-number">{{ performance.total_classes }}</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Attended</div>
+                <div class="value-number">{{ performance.attended_classes }}</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Attendance %</div>
+                <div class="value-number">{{ performance.attendance_percentage }}%</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Internal 1</div>
+                <div class="value-number">{{ performance.internal1 }}</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Internal 2</div>
+                <div class="value-number">{{ performance.internal2 }}</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Assignment</div>
+                <div class="value-number">{{ performance.assessment }}</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Seminar</div>
+                <div class="value-number">{{ performance.seminar }}</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Total/160</div>
+                <div class="value-number">{{ performance.total_marks }}</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Final/20</div>
+                <div class="value-number">{{ performance.final_marks }}</div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Grade</div>
+                <div class="value-number">
+                    <span class="grade-badge 
+                        {% if performance.grade == 'A+' %}grade-aplus
+                        {% elif performance.grade == 'A' %}grade-a
+                        {% elif performance.grade == 'B' %}grade-b
+                        {% elif performance.grade == 'C' %}grade-c
+                        {% else %}grade-d{% endif %}">
+                        {{ performance.grade }}
+                    </span>
+                </div>
+            </div>
+            <div class="value-item">
+                <div class="value-label">Risk</div>
+                <div class="value-number">
+                    <span class="risk-badge 
+                        {% if performance.risk_status == 'Critical' %}risk-critical
+                        {% elif performance.risk_status == 'Average' %}risk-average
+                        {% elif performance.risk_status == 'Safe' %}risk-safe
+                        {% else %}risk-best{% endif %}">
+                        {{ performance.risk_status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Form -->
+    <form method="POST" class="edit-section" onsubmit="return validateForm()">
+        <div class="section-title">✏️ Edit Values</div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-calendar-alt"></i> Total Classes</label>
+                    <input type="number" name="total_classes" class="form-control" 
+                           value="{{ performance.total_classes }}" min="1" max="200" step="1" required
+                           oninput="calculateLive()" onkeypress="return onlyNumbers(event)">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-check-circle"></i> Attended Classes</label>
+                    <input type="number" name="attended_classes" class="form-control" 
+                           value="{{ performance.attended_classes }}" min="0" step="1" required
+                           oninput="calculateLive()" onkeypress="return onlyNumbers(event)">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-pencil-alt"></i> Internal 1 (0-70)</label>
+                    <input type="number" name="internal1" class="form-control" 
+                           value="{{ performance.internal1 }}" min="0" max="70" step="1" required
+                           oninput="calculateLive()" onkeypress="return onlyNumbers(event)">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-pencil-alt"></i> Internal 2 (0-70)</label>
+                    <input type="number" name="internal2" class="form-control" 
+                           value="{{ performance.internal2 }}" min="0" max="70" step="1" required
+                           oninput="calculateLive()" onkeypress="return onlyNumbers(event)">
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-tasks"></i> Assignment (0-10)</label>
+                    <input type="number" name="assignment" class="form-control" 
+                           value="{{ performance.assessment }}" min="0" max="10" step="1" required
+                           oninput="calculateLive()" onkeypress="return onlyNumbers(event)">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-chart-line"></i> Seminar (0-10)</label>
+                    <input type="number" name="seminar" class="form-control" 
+                           value="{{ performance.seminar }}" min="0" max="10" step="1" required
+                           oninput="calculateLive()" onkeypress="return onlyNumbers(event)">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-calculator"></i> Attendance %</label>
+                    <div class="readonly-field" id="display-attendance">{{ performance.attendance_percentage }}%</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-star"></i> Total Marks/160</label>
+                    <div class="readonly-field" id="display-total">{{ performance.total_marks }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Preview -->
+        <div class="live-preview">
+            <h6 class="text-purple mb-3"><i class="fas fa-sync-alt me-2"></i>Live Preview (Auto-updates)</h6>
+            <div class="preview-grid">
+                <div class="preview-item">
+                    <div class="preview-label">Final/20</div>
+                    <div class="preview-value" id="preview-final">{{ performance.final_marks }}</div>
+                </div>
+                <div class="preview-item">
+                    <div class="preview-label">Marks %</div>
+                    <div class="preview-value" id="preview-percentage">{{ performance.percentage }}%</div>
+                </div>
+                <div class="preview-item">
+                    <div class="preview-label">Grade</div>
+                    <div class="preview-value" id="preview-grade">
+                        <span class="grade-badge 
+                            {% if performance.grade == 'A+' %}grade-aplus
+                            {% elif performance.grade == 'A' %}grade-a
+                            {% elif performance.grade == 'B' %}grade-b
+                            {% elif performance.grade == 'C' %}grade-c
+                            {% else %}grade-d{% endif %}">
+                            {{ performance.grade }}
+                        </span>
+                    </div>
+                </div>
+                <div class="preview-item">
+                    <div class="preview-label">Risk</div>
+                    <div class="preview-value" id="preview-risk">
+                        <span class="risk-badge 
+                            {% if performance.risk_status == 'Critical' %}risk-critical
+                            {% elif performance.risk_status == 'Average' %}risk-average
+                            {% elif performance.risk_status == 'Safe' %}risk-safe
+                            {% else %}risk-best{% endif %}">
+                            {{ performance.risk_status }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <button type="submit" class="btn-update">
+                <i class="fas fa-save me-2"></i>Update Marks
+            </button>
+            <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-purple ms-3">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+function calculateLive() {
+    // Get values
+    let total_classes = parseInt(document.querySelector('input[name="total_classes"]').value) || 0;
+    let attended = parseInt(document.querySelector('input[name="attended_classes"]').value) || 0;
+    let i1 = parseInt(document.querySelector('input[name="internal1"]').value) || 0;
+    let i2 = parseInt(document.querySelector('input[name="internal2"]').value) || 0;
+    let assign = parseInt(document.querySelector('input[name="assignment"]').value) || 0;
+    let sem = parseInt(document.querySelector('input[name="seminar"]').value) || 0;
+    
+    // Validate attended <= total
+    if (attended > total_classes) {
+        document.querySelector('input[name="attended_classes"]').classList.add('error');
+    } else {
+        document.querySelector('input[name="attended_classes"]').classList.remove('error');
+    }
+    
+    // Calculate attendance
+    let attendance_percent = total_classes > 0 ? Math.round((attended / total_classes) * 100) : 0;
+    document.getElementById('display-attendance').textContent = attendance_percent + '%';
+    
+    // Calculate total
+    let total = i1 + i2 + assign + sem;
+    document.getElementById('display-total').textContent = total;
+    
+    // Calculate final
+    let final = Math.round((total / 160) * 20);
+    document.getElementById('preview-final').textContent = final;
+    
+    // Calculate percentage
+    let percentage = Math.round((final / 20) * 100);
+    document.getElementById('preview-percentage').textContent = percentage + '%';
+    
+    // Calculate grade
+    let grade = '';
+    if (final >= 18) grade = 'A+';
+    else if (final >= 15) grade = 'A';
+    else if (final >= 12) grade = 'B';
+    else if (final >= 10) grade = 'C';
+    else grade = 'D';
+    
+    let gradeClass = '';
+    if (grade == 'A+') gradeClass = 'grade-aplus';
+    else if (grade == 'A') gradeClass = 'grade-a';
+    else if (grade == 'B') gradeClass = 'grade-b';
+    else if (grade == 'C') gradeClass = 'grade-c';
+    else gradeClass = 'grade-d';
+    
+    document.getElementById('preview-grade').innerHTML = 
+        `<span class="grade-badge ${gradeClass}">${grade}</span>`;
+    
+    // Calculate risk
+    let risk = '';
+    if (attendance_percent < 70 || final < 10) risk = 'Critical';
+    else if (final < 15) risk = 'Average';
+    else if (final == 20) risk = 'Best';
+    else risk = 'Safe';
+    
+    let riskClass = '';
+    if (risk == 'Critical') riskClass = 'risk-critical';
+    else if (risk == 'Average') riskClass = 'risk-average';
+    else if (risk == 'Safe') riskClass = 'risk-safe';
+    else riskClass = 'risk-best';
+    
+    document.getElementById('preview-risk').innerHTML = 
+        `<span class="risk-badge ${riskClass}">${risk}</span>`;
+}
+
+function validateForm() {
+    let total = parseInt(document.querySelector('input[name="total_classes"]').value) || 0;
+    let attended = parseInt(document.querySelector('input[name="attended_classes"]').value) || 0;
+    
+    if (attended > total) {
+        alert('Attended classes cannot exceed total classes!');
+        return false;
+    }
+    
+    return confirm('Update marks for this student?');
+}
+</script>
+{% endblock %}

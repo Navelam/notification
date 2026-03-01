@@ -1,0 +1,391 @@
+{% extends "student/base_student.html" %}
+
+{% block title %}My Performance - SPAS{% endblock %}
+
+{% block header_title %}My Performance{% endblock %}
+{% block header_subtitle %}Subject-wise detailed analysis with feedback{% endblock %}
+
+{% block extra_css %}
+<style>
+    .semester-section {
+        margin-bottom: 30px;
+    }
+    
+    .semester-title {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .semester-badge {
+        background: white;
+        color: #6f42c1;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+    
+    /* Feedback Cards */
+    .feedback-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left: 8px solid;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+    }
+    
+    .feedback-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(111, 66, 193, 0.15);
+    }
+    
+    .feedback-card.critical { border-left-color: #dc3545; }
+    .feedback-card.average { border-left-color: #ffc107; }
+    .feedback-card.safe { border-left-color: #28a745; }
+    .feedback-card.best { border-left-color: #6f42c1; }
+    
+    .card-header-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .subject-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .subject-name small {
+        font-weight: normal;
+        color: #6c757d;
+    }
+    
+    .risk-badge {
+        padding: 5px 15px;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+    
+    .risk-critical { background: #dc3545; color: white; }
+    .risk-average { background: #ffc107; color: #2c3e50; }
+    .risk-safe { background: #28a745; color: white; }
+    .risk-best { background: #6f42c1; color: white; }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .stat-item {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 12px;
+        text-align: center;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    
+    .grade-badge {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .grade-aplus { background: #6f42c1; color: white; }
+    .grade-a { background: #9b59b6; color: white; }
+    .grade-b { background: #3498db; color: white; }
+    .grade-c { background: #f1c40f; color: #2c3e50; }
+    .grade-d { background: #e74c3c; color: white; }
+    
+    .feedback-message {
+        border-radius: 10px;
+        padding: 15px;
+        margin: 15px 0;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    
+    .feedback-critical { background: #fff5f5; color: #dc3545; border-left: 4px solid #dc3545; }
+    .feedback-average { background: #fff3e0; color: #856404; border-left: 4px solid #ffc107; }
+    .feedback-safe { background: #f0fff4; color: #28a745; border-left: 4px solid #28a745; }
+    .feedback-best { background: #f3e9ff; color: #6f42c1; border-left: 4px solid #6f42c1; }
+    
+    .next-grade {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 15px;
+        background: #f3e9ff;
+        border-radius: 8px;
+        margin-top: 10px;
+        font-size: 0.95rem;
+    }
+    
+    .next-grade i {
+        color: #6f42c1;
+        font-size: 1.1rem;
+    }
+    
+    .marks-needed {
+        font-weight: 700;
+        color: #6f42c1;
+        font-size: 1.1rem;
+    }
+    
+    .attendance-bar {
+        width: 100%;
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        margin-top: 5px;
+        overflow: hidden;
+    }
+    
+    .attendance-fill {
+        height: 100%;
+        border-radius: 3px;
+    }
+    
+    .fill-critical { background: #dc3545; }
+    .fill-average { background: #ffc107; }
+    .fill-safe { background: #28a745; }
+    .fill-best { background: #6f42c1; }
+    
+    .summary-card {
+        background: linear-gradient(135deg, #f3e9ff, #ffffff);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .summary-title {
+        color: #6f42c1;
+        font-weight: 600;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+    }
+    
+    .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+    
+    .summary-stat {
+        text-align: center;
+    }
+    
+    .summary-stat .value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #6f42c1;
+    }
+    
+    .summary-stat .label {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .summary-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .card-header-custom {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Student Info Bar -->
+<div class="summary-card">
+    <div class="summary-title">
+        <i class="fas fa-user-graduate me-2"></i>{{ student.name }}
+    </div>
+    <div class="summary-stats">
+        <div class="summary-stat">
+            <div class="value">@{{ current_user.username }}</div>
+            <div class="label">Username</div>
+        </div>
+        <div class="summary-stat">
+            <div class="value">{{ student.student_id }}</div>
+            <div class="label">Student ID</div>
+        </div>
+        <div class="summary-stat">
+            <div class="value">{{ performances|length }}</div>
+            <div class="label">Subjects</div>
+        </div>
+        <div class="summary-stat">
+            <div class="value">{{ performances_by_semester|length }}</div>
+            <div class="label">Semesters</div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance by Semester with Direct Feedback -->
+{% for semester, subjects in performances_by_semester.items()|sort %}
+<div class="semester-section">
+    <div class="semester-title">
+        <span><i class="fas fa-layer-group me-2"></i> Semester {{ semester }}</span>
+        <span class="semester-badge">{{ subjects|length }} Subjects</span>
+    </div>
+    
+    {% for perf in subjects %}
+    <!-- Feedback Card - Color coded by risk -->
+    <div class="feedback-card {{ perf.risk_status|lower }}">
+        <div class="card-header-custom">
+            <span class="subject-name">
+                <i class="fas fa-book me-2" style="color: #6f42c1;"></i>
+                {{ perf.subject.name }} <small class="text-muted">({{ perf.subject.code }})</small>
+            </span>
+            <span class="risk-badge risk-{{ perf.risk_status|lower }}">
+                <i class="fas fa-{% if perf.risk_status == 'Critical' %}exclamation-triangle{% elif perf.risk_status == 'Average' %}exclamation-circle{% elif perf.risk_status == 'Safe' %}check-circle{% else %}star{% endif %} me-1"></i>
+                {{ perf.risk_status }}
+            </span>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-label">Final Marks</div>
+                <div class="stat-value">{{ perf.final_marks }}/20</div>
+                <div class="stat-label" style="margin-top: 5px;">{{ perf.percentage }}%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Attendance</div>
+                <div class="stat-value">{{ perf.attendance }}%</div>
+                <div class="attendance-bar">
+                    <div class="attendance-fill fill-{{ perf.risk_status|lower }}" 
+                         style="width: {{ perf.attendance }}%"></div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Grade</div>
+                <div class="stat-value">
+                    <span class="grade-badge grade-{{ perf.grade|lower|replace('+', 'plus') }}">
+                        {{ perf.grade }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Internal Marks Details -->
+        <div class="row mb-3">
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Internal 1</small>
+                <div><strong>{{ perf.internal1 }}</strong>/70</div>
+            </div>
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Internal 2</small>
+                <div><strong>{{ perf.internal2 }}</strong>/70</div>
+            </div>
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Seminar</small>
+                <div><strong>{{ perf.seminar }}</strong>/10</div>
+            </div>
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Assessment</small>
+                <div><strong>{{ perf.assessment }}</strong>/10</div>
+            </div>
+        </div>
+        
+        <!-- Direct Feedback Message -->
+        <div class="feedback-message feedback-{{ perf.risk_status|lower }}">
+            <i class="fas fa-{{ perf.feedback.icon }} me-2"></i>
+            {{ perf.feedback.message }}
+        </div>
+        
+        <!-- Next Grade Information - Works for ALL students -->
+        <div class="next-grade">
+            <i class="fas fa-arrow-up"></i>
+            <span>
+                {% if perf.final_marks >= 18 %}
+                    🎉 Excellent! You have achieved <strong>A+ grade</strong>!
+                {% elif perf.final_marks >= 15 %}
+                    You need <strong class="marks-needed">{{ (18 - perf.final_marks)|round(1) }}</strong> more marks to reach <strong>A+ grade</strong>.
+                {% elif perf.final_marks >= 12 %}
+                    You need <strong class="marks-needed">{{ (15 - perf.final_marks)|round(1) }}</strong> more marks to reach <strong>A grade</strong>.
+                {% elif perf.final_marks >= 10 %}
+                    You need <strong class="marks-needed">{{ (12 - perf.final_marks)|round(1) }}</strong> more marks to reach <strong>B grade</strong>.
+                {% else %}
+                    ⚠️ You need <strong class="marks-needed">{{ (10 - perf.final_marks)|round(1) }}</strong> more marks to reach <strong>C (Pass) grade</strong>.
+                {% endif %}
+            </span>
+        </div>
+        
+        <!-- Detailed Breakdown -->
+        <details class="mt-2">
+            <summary class="text-purple" style="cursor: pointer;">
+                <i class="fas fa-chart-line me-1"></i> View detailed breakdown
+            </summary>
+            <div class="mt-2 p-3 bg-light rounded">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Internal Exams Total: {{ perf.internal1 + perf.internal2 }}/140</small>
+                        <small class="text-muted d-block">Other Components: {{ perf.seminar + perf.assessment }}/20</small>
+                        <small class="text-muted d-block">Grand Total: {{ perf.internal1 + perf.internal2 + perf.seminar + perf.assessment }}/160</small>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Attendance Penalty: 
+                            {% if perf.attendance < 60 %}
+                                <span class="text-danger">High Penalty (₹1000)</span>
+                            {% elif perf.attendance < 70 %}
+                                <span class="text-warning">Medium Penalty (₹500)</span>
+                            {% elif perf.attendance < 75 %}
+                                <span class="text-info">Low Penalty (₹200)</span>
+                            {% else %}
+                                <span class="text-success">No Penalty</span>
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </details>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+    <h5>No Performance Data</h5>
+    <p class="text-muted">Your performance records will appear here once teachers enter marks.</p>
+</div>
+{% endfor %}
+{% endblock %}

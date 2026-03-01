@@ -1,0 +1,711 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}Enter Marks - {{ subject.name }}{% endblock %}
+
+{% block header_title %}Enter Marks{% endblock %}
+{% block header_subtitle %}{{ subject.name }} ({{ subject.code }}) - Semester {{ subject.semester_id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .entry-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e9ecef;
+    }
+    
+    .form-title {
+        color: #6f42c1;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f3e9ff;
+        font-size: 1.3rem;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .student-navigation {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .nav-btn {
+        background: #f3e9ff;
+        border: 2px solid #6f42c1;
+        color: #6f42c1;
+        padding: 8px 15px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .nav-btn:hover {
+        background: #6f42c1;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .nav-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    
+    .student-counter {
+        background: #6f42c1;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 25px;
+        font-weight: 600;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-label i {
+        color: #6f42c1;
+        width: 20px;
+        margin-right: 5px;
+    }
+    
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        background: white;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #6f42c1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+    }
+    
+    .form-control.error {
+        border-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -10px;
+    }
+    
+    .col-md-6 {
+        width: 50%;
+        padding: 0 10px;
+        box-sizing: border-box;
+    }
+    
+    .col-md-4 {
+        width: 33.333%;
+        padding: 0 10px;
+        box-sizing: border-box;
+    }
+    
+    .marks-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .section-title {
+        color: #6f42c1;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        flex: 1;
+        min-width: 150px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(111, 66, 193, 0.4);
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        flex: 1;
+        min-width: 150px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+    }
+    
+    .btn-info {
+        background: linear-gradient(135deg, #17a2b8, #0dcaf0);
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        flex: 1;
+        min-width: 150px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(23, 162, 184, 0.4);
+    }
+    
+    .quick-fill {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+        align-items: center;
+    }
+    
+    .quick-fill-btn {
+        background: white;
+        border: 2px solid #6f42c1;
+        color: #6f42c1;
+        padding: 8px 15px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .quick-fill-btn:hover {
+        background: #6f42c1;
+        color: white;
+    }
+    
+    .alert-success {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        color: #155724;
+    }
+    
+    .subject-badge {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 5px 15px;
+        border-radius: 20px;
+        display: inline-block;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .grade-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        min-width: 60px;
+        text-align: center;
+    }
+    .grade-aplus { background: #6f42c1; color: white; }
+    .grade-a { background: #9b59b6; color: white; }
+    .grade-b { background: #3498db; color: white; }
+    .grade-c { background: #f1c40f; color: #2c3e50; }
+    .grade-d { background: #e74c3c; color: white; }
+
+    .risk-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .risk-critical { background: #dc3545; color: white; }
+    .risk-average { background: #ffc107; color: #2c3e50; }
+    .risk-safe { background: #28a745; color: white; }
+    .risk-best { background: #6f42c1; color: white; }
+    
+    @media (max-width: 768px) {
+        .col-md-6, .col-md-4 {
+            width: 100%;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .form-title {
+            flex-direction: column;
+            gap: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="entry-container">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="form-card">
+        <div class="form-title">
+            <div>
+                <i class="fas fa-pencil-alt"></i> Manual Marks Entry
+            </div>
+            <div class="student-navigation">
+                {% if selected_student %}
+                    {% if prev_student %}
+                    <a href="{{ url_for('teacher.enter_marks', subject_id=subject.id, student_id=prev_student.id) }}" 
+                       class="nav-btn">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                    {% else %}
+                    <span class="nav-btn disabled">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </span>
+                    {% endif %}
+                    
+                    <span class="student-counter">
+                        {{ current_index }}/{{ total_students }}
+                    </span>
+                    
+                    {% if next_student %}
+                    <a href="{{ url_for('teacher.enter_marks', subject_id=subject.id, student_id=next_student.id) }}" 
+                       class="nav-btn">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% else %}
+                    <span class="nav-btn disabled">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="subject-badge">
+            <i class="fas fa-book me-2"></i> {{ subject.name }} ({{ subject.code }}) - Semester {{ subject.semester_id }}
+        </div>
+        
+        <!-- Student Selection Form (GET) -->
+        <form method="GET" action="{{ url_for('teacher.enter_marks', subject_id=subject.id) }}" id="studentSelectForm">
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-user-graduate"></i> Select Student <span class="text-danger">*</span></label>
+                <select name="student_id" class="form-select" required onchange="this.form.submit()">
+                    <option value="">-- Choose a student --</option>
+                    {% for student in students %}
+                    <option value="{{ student.id }}" {% if selected_student and selected_student.id == student.id %}selected{% endif %}>
+                        {{ student.name }} ({{ student.registration_number }}) - Sem {{ student.current_semester }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+        
+        <!-- Marks Entry Form (POST) - Only shown when student is selected -->
+        {% if selected_student %}
+        <div class="alert alert-success">
+            <i class="fas fa-user-graduate me-2"></i>
+            <strong>Selected Student:</strong> {{ selected_student.name }} ({{ selected_student.registration_number }}) 
+            - Semester {{ selected_student.current_semester }}
+            {% if existing_marks %}
+            <span class="badge bg-success ms-2">Marks Already Entered</span>
+            {% endif %}
+        </div>
+        
+        <form method="POST" action="{{ url_for('teacher.save_marks', subject_id=subject.id) }}" id="marksForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="student_id" value="{{ selected_student.id }}">
+            
+            <!-- Attendance Section -->
+            <div class="marks-section">
+                <h5 class="section-title"><i class="fas fa-calendar-check"></i> Attendance Details</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Total Classes</label>
+                            <input type="number" name="total_classes" class="form-control" 
+                                   value="{{ existing_marks.total_classes if existing_marks else 20 }}" 
+                                   min="1" max="200" step="1" required
+                                   oninput="calculateMarks()">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Attended Classes</label>
+                            <input type="number" name="attended" class="form-control" 
+                                   value="{{ existing_marks.attended if existing_marks else 18 }}" 
+                                   min="0" step="1" required
+                                   oninput="calculateMarks()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Marks Section -->
+            <div class="marks-section">
+                <h5 class="section-title"><i class="fas fa-pencil-alt"></i> Marks Details</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Internal 1 (0-70)</label>
+                            <input type="number" name="internal1" class="form-control" 
+                                   value="{{ existing_marks.internal1 if existing_marks else 35 }}" 
+                                   min="0" max="70" step="1" required
+                                   oninput="calculateMarks()">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Internal 2 (0-70)</label>
+                            <input type="number" name="internal2" class="form-control" 
+                                   value="{{ existing_marks.internal2 if existing_marks else 35 }}" 
+                                   min="0" max="70" step="1" required
+                                   oninput="calculateMarks()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Seminar (0-10)</label>
+                            <input type="number" name="seminar" class="form-control" 
+                                   value="{{ existing_marks.seminar if existing_marks else 8 }}" 
+                                   min="0" max="10" step="1" required
+                                   oninput="calculateMarks()">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Assessment (0-10)</label>
+                            <input type="number" name="assessment" class="form-control" 
+                                   value="{{ existing_marks.assessment if existing_marks else 8 }}" 
+                                   min="0" max="10" step="1" required
+                                   oninput="calculateMarks()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Fill Buttons -->
+            <div class="quick-fill">
+                <span class="form-label" style="margin-bottom:0;"><i class="fas fa-bolt"></i> Quick Fill:</span>
+                <button type="button" class="quick-fill-btn" onclick="fillExcellent()">Excellent</button>
+                <button type="button" class="quick-fill-btn" onclick="fillGood()">Good</button>
+                <button type="button" class="quick-fill-btn" onclick="fillAverage()">Average</button>
+                <button type="button" class="quick-fill-btn" onclick="fillPoor()">Poor</button>
+            </div>
+            
+            <!-- Live Preview -->
+            <div class="marks-section">
+                <h5 class="section-title"><i class="fas fa-sync-alt"></i> Live Preview</h5>
+                <div class="row">
+                    <div class="col-md-2 col-6 mb-2">
+                        <div class="text-center p-2 bg-light rounded">
+                            <small class="text-muted d-block">Attendance</small>
+                            <strong id="previewAttendance">90%</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <div class="text-center p-2 bg-light rounded">
+                            <small class="text-muted d-block">Total/160</small>
+                            <strong id="previewTotal">86</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <div class="text-center p-2 bg-light rounded">
+                            <small class="text-muted d-block">Final/20</small>
+                            <strong id="previewFinal">10.8</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-2">
+                        <div class="text-center p-2 bg-light rounded">
+                            <small class="text-muted d-block">Grade</small>
+                            <span id="previewGrade" class="grade-badge grade-c">C</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-2">
+                        <div class="text-center p-2 bg-light rounded">
+                            <small class="text-muted d-block">Risk</small>
+                            <span id="previewRisk" class="risk-badge risk-safe">Safe</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button type="submit" name="action" value="save" class="btn-primary">
+                    <i class="fas fa-save me-2"></i> Save Marks
+                </button>
+                
+                {% if next_student %}
+                <button type="submit" name="action" value="save_next" class="btn-success">
+                    <i class="fas fa-save me-2"></i> Save & Next
+                </button>
+                {% endif %}
+                
+                <a href="{{ url_for('teacher.student_results', subject_id=subject.id) }}" class="btn-info">
+                    <i class="fas fa-list me-2"></i> View Results
+                </a>
+            </div>
+        </form>
+        
+        {% else %}
+        <!-- Message when no student is selected -->
+        <div class="alert alert-info mt-4">
+            <i class="fas fa-info-circle me-2"></i>
+            Please select a student from the dropdown above to enter marks.
+        </div>
+        {% endif %}
+        
+    </div>
+    
+    <!-- Quick Stats Card -->
+    <div class="form-card" style="margin-top: 20px; padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div>
+                <i class="fas fa-users text-purple me-2"></i>
+                <strong>Total Students:</strong> {{ students|length }}
+            </div>
+            <div>
+                <i class="fas fa-check-circle text-success me-2"></i>
+                <strong>Marks Entered:</strong> {{ stats.entered if stats else 0 }}
+            </div>
+            <div>
+                <i class="fas fa-clock text-warning me-2"></i>
+                <strong>Pending:</strong> {{ stats.pending if stats else (students|length - (stats.entered if stats else 0)) }}
+            </div>
+            <div>
+                <a href="{{ url_for('teacher.download_results', subject_id=subject.id) }}" class="btn btn-outline-purple">
+                    <i class="fas fa-download me-1"></i> Download
+                </a>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        {% set percentage = (stats.entered / stats.total * 100) if stats and stats.total and stats.total > 0 else 0 %}
+        <div style="margin-top: 15px; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+            <div style="height: 100%; width: {{ percentage }}%; background: linear-gradient(90deg, #6f42c1, #9b59b6);"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Grade and risk classes mapping
+const gradeClasses = {
+    'A+': 'grade-aplus',
+    'A': 'grade-a',
+    'B': 'grade-b',
+    'C': 'grade-c',
+    'D': 'grade-d'
+};
+
+const riskClasses = {
+    'Critical': 'risk-critical',
+    'Average': 'risk-average',
+    'Safe': 'risk-safe',
+    'Best': 'risk-best'
+};
+
+// Calculate grade based on final marks (out of 20)
+function calculateGrade(final) {
+    if (final >= 18) return 'A+';
+    if (final >= 15) return 'A';
+    if (final >= 12) return 'B';
+    if (final >= 10) return 'C';
+    return 'D';
+}
+
+// Calculate risk status
+function calculateRisk(attendance, final) {
+    if (attendance < 70 || final < 10) return 'Critical';
+    if (final < 15) return 'Average';
+    if (final >= 18) return 'Best';
+    return 'Safe';
+}
+
+// Calculate all values live
+function calculateMarks() {
+    // Get values
+    let total_classes = parseInt(document.querySelector('input[name="total_classes"]')?.value) || 0;
+    let attended = parseInt(document.querySelector('input[name="attended"]')?.value) || 0;
+    let i1 = parseInt(document.querySelector('input[name="internal1"]')?.value) || 0;
+    let i2 = parseInt(document.querySelector('input[name="internal2"]')?.value) || 0;
+    let sem = parseInt(document.querySelector('input[name="seminar"]')?.value) || 0;
+    let assess = parseInt(document.querySelector('input[name="assessment"]')?.value) || 0;
+    
+    // Validate attended <= total
+    let attendedInput = document.querySelector('input[name="attended"]');
+    if (attendedInput && attended > total_classes && total_classes > 0) {
+        attendedInput.classList.add('error');
+    } else if (attendedInput) {
+        attendedInput.classList.remove('error');
+    }
+    
+    // Calculate attendance percentage
+    let attendance_percent = total_classes > 0 ? Math.round((attended / total_classes) * 100) : 0;
+    let previewAttendance = document.getElementById('previewAttendance');
+    if (previewAttendance) previewAttendance.textContent = attendance_percent + '%';
+    
+    // Calculate total marks (out of 160)
+    let total = i1 + i2 + sem + assess;
+    let previewTotal = document.getElementById('previewTotal');
+    if (previewTotal) previewTotal.textContent = total;
+    
+    // Calculate final marks (convert to 20)
+    let final = total > 0 ? Math.round((total / 160) * 20 * 10) / 10 : 0;
+    let previewFinal = document.getElementById('previewFinal');
+    if (previewFinal) previewFinal.textContent = final;
+    
+    // Calculate grade
+    let grade = calculateGrade(final);
+    let previewGrade = document.getElementById('previewGrade');
+    if (previewGrade) {
+        previewGrade.className = `grade-badge ${gradeClasses[grade]}`;
+        previewGrade.textContent = grade;
+    }
+    
+    // Calculate risk
+    let risk = calculateRisk(attendance_percent, final);
+    let previewRisk = document.getElementById('previewRisk');
+    if (previewRisk) {
+        previewRisk.className = `risk-badge ${riskClasses[risk]}`;
+        previewRisk.textContent = risk;
+    }
+}
+
+// Quick fill functions
+function fillExcellent() {
+    document.querySelector('input[name="total_classes"]').value = 20;
+    document.querySelector('input[name="attended"]').value = 20;
+    document.querySelector('input[name="internal1"]').value = 68;
+    document.querySelector('input[name="internal2"]').value = 68;
+    document.querySelector('input[name="seminar"]').value = 10;
+    document.querySelector('input[name="assessment"]').value = 10;
+    calculateMarks();
+}
+
+function fillGood() {
+    document.querySelector('input[name="total_classes"]').value = 20;
+    document.querySelector('input[name="attended"]').value = 18;
+    document.querySelector('input[name="internal1"]').value = 55;
+    document.querySelector('input[name="internal2"]').value = 52;
+    document.querySelector('input[name="seminar"]').value = 8;
+    document.querySelector('input[name="assessment"]').value = 8;
+    calculateMarks();
+}
+
+function fillAverage() {
+    document.querySelector('input[name="total_classes"]').value = 20;
+    document.querySelector('input[name="attended"]').value = 15;
+    document.querySelector('input[name="internal1"]').value = 45;
+    document.querySelector('input[name="internal2"]').value = 42;
+    document.querySelector('input[name="seminar"]').value = 6;
+    document.querySelector('input[name="assessment"]').value = 6;
+    calculateMarks();
+}
+
+function fillPoor() {
+    document.querySelector('input[name="total_classes"]').value = 20;
+    document.querySelector('input[name="attended"]').value = 10;
+    document.querySelector('input[name="internal1"]').value = 25;
+    document.querySelector('input[name="internal2"]').value = 20;
+    document.querySelector('input[name="seminar"]').value = 3;
+    document.querySelector('input[name="assessment"]').value = 3;
+    calculateMarks();
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    calculateMarks();
+    
+    // Add input listeners
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('input', calculateMarks);
+    });
+});
+</script>
+{% endblock %}

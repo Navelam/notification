@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SPAS - Student Performance Analysis System{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 - All icons guaranteed to work -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --purple-primary: #6f42c1;
+            --purple-light: #9b59b6;
+            --purple-soft: #f3e9ff;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --fee: #dc3545;
+            --meeting: #fd7e14;
+            --event: #6f42c1;
+            --result: #28a745;
+            --timetable: #17a2b8;
+            --academic: #20c997;
+            --general: #6610f2;
+            --shadow: 0 5px 20px rgba(111, 66, 193, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, #6f42c1, #9b59b6);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-brand i {
+            font-size: 2rem;
+        }
+
+        .navbar-brand:hover {
+            color: white;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.9);
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        /* Notification Bell Container */
+        .notification-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .notification-bell {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.3rem;
+            cursor: pointer;
+            position: relative;
+            padding: 8px 12px;
+            border-radius: 50px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .notification-bell:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.05);
+        }
+
+        .notification-bell i {
+            font-size: 1.3rem;
+        }
+
+        /* Notification Badge - Red Circle with Count */
+        .notification-badge {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            background: #dc3545;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            animation: pulse 2s infinite;
+            border: 2px solid white;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Notification Dropdown Panel */
+        .notification-panel {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 380px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border: 1px solid #e9ecef;
+            z-index: 1000;
+            display: none;
+            margin-top: 10px;
+        }
+
+        .notification-panel.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification-header {
+            background: linear-gradient(135deg, #6f42c1, #9b59b6);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-header h6 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .notification-header button {
+            background: white;
+            color: #6f42c1;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .notification-header button:hover {
+            background: #f3e9ff;
+            transform: translateY(-2px);
+        }
+
+        .notification-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .notification-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        .notification-item.unread {
+            background-color: #f0f0ff;
+            border-left: 4px solid #6f42c1;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.fee { background: #dc3545; }
+        .notification-icon.meeting { background: #fd7e14; }
+        .notification-icon.event { background: #6f42c1; }
+        .notification-icon.result { background: #28a745; }
+        .notification-icon.timetable { background: #17a2b8; }
+        .notification-icon.academic { background: #20c997; }
+        .notification-icon.general { background: #6610f2; }
+        .notification-icon.exam { background: #17a2b8; }
+        .notification-icon.room { background: #28a745; }
+        .notification-icon.invigilation { background: #ffc107; color: #2c3e50; }
+        .notification-icon.marks { background: #6f42c1; }
+        .notification-icon.attendance { background: #dc3545; }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            font-size: 0.95rem;
+        }
+
+        .notification-message {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .notification-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #adb5bd;
+        }
+
+        .notification-time i {
+            margin-right: 3px;
+        }
+
+        .notification-footer {
+            padding: 12px 20px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .notification-footer a {
+            color: #6f42c1;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .notification-footer a:hover {
+            color: #5a32a3;
+            text-decoration: underline;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6f42c1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 10px;
+            border: none;
+            border-left: 4px solid;
+            animation: slideIn 0.5s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: var(--success);
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: var(--danger);
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left-color: var(--warning);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: auto;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            padding: 1.5rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-brand span {
+                display: none;
+            }
+            
+            .notification-panel {
+                width: 300px;
+                right: -20px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .notification-panel {
+                width: 280px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p class="mt-3 text-purple fw-bold">Loading...</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <i class="fas fa-graduation-cap"></i>
+                <span>SPAS</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    {% if current_user.is_authenticated %}
+                        <!-- Notification Bell - FIXED VERSION -->
+                        <li class="nav-item">
+                            <div class="notification-wrapper">
+                                <button class="notification-bell" id="notificationBell">
+                                    <i class="fas fa-bell"></i>
+                                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                                </button>
+                              <!-- In base.html, ensure this notification panel exists -->
+<div class="notification-wrapper">
+    <button class="notification-bell" id="notificationBell">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+    </button>
+    
+    <!-- Notification Dropdown Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h6><i class="fas fa-bell me-2"></i>Notifications</h6>
+            <button id="markAllReadBtn">Mark all read</button>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                <p class="mb-0">No notifications</p>
+            </div>
+        </div>
+        <div class="notification-footer">
+            <a href="{{ url_for('public.notifications') }}">View all notifications <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
+    </div>
+</div>
+                            </div>
+                        </li>
+                        
+                        <!-- User Dropdown -->
+                        <li class="nav-item dropdown ms-2">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle fa-lg me-1"></i>
+                                <span>{{ current_user.full_name }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                    <i class="fas fa-user text-purple me-2"></i>Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
+                                    <i class="fas fa-key text-purple me-2"></i>Change Password
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('home') }}">
+                                <i class="fas fa-home me-1"></i>Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light me-2" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">
+                <i class="fas fa-copyright me-1"></i> 
+                {{ now.year if now else '2026' }}PK DAS LIBERAL COLLEGE OF ARTS AND SCIENCE
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    
+<!-- In base.html or wherever your bell icon JavaScript is -->
+
+<script>
+// =====================================================
+// FIXED NOTIFICATION SYSTEM
+// =====================================================
+$(document).ready(function() {
+    console.log('✅ Notification system initialized');
+    
+    if ($('#notificationBell').length > 0) {
+        loadPublicNotifications();
+        setInterval(loadPublicNotifications, 30000); // Refresh every 30 seconds
+        
+        $('#notificationBell').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#notificationPanel').toggleClass('show');
+            loadPublicNotifications(); // Refresh when opened
+        });
+        
+        $('#markAllReadBtn').on('click', function() {
+            $('#notificationBadge').hide();
+            $('#notificationPanel').removeClass('show');
+            showToast('Notifications marked as viewed');
+        });
+        
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.notification-wrapper').length) {
+                $('#notificationPanel').removeClass('show');
+            }
+        });
+    }
+});
+
+function loadPublicNotifications() {
+    $('#notificationList').html('<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+    
+    $.ajax({
+        url: '/api/public/notifications',
+        method: 'GET',
+        dataType: 'json',
+        timeout: 5000,
+        success: function(data) {
+            console.log('📨 Notifications received:', data);
+            
+            if (data.success && data.notifications && data.notifications.length > 0) {
+                $('#notificationBadge').text(data.notifications.length).show();
+                
+                let html = '';
+                data.notifications.forEach(function(n) {
+                    let iconClass = n.icon_class || 'general';
+                    
+                    html += `
+                        <div class="notification-item" onclick="window.location.href='${n.link || '#'}'">
+                            <div class="notification-icon ${iconClass}">
+                                <i class="fas ${n.icon || 'fa-bell'}"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">${escapeHtml(n.title)}</div>
+                                <div class="notification-message">${escapeHtml(truncateText(n.message, 80))}</div>
+                                <div class="notification-meta">
+                                    <span class="notification-time">
+                                        <i class="far fa-clock"></i> ${n.time_ago || 'Just now'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('#notificationList').html(html);
+            } else {
+                $('#notificationBadge').hide();
+                $('#notificationList').html(`
+                    <div class="text-center p-4 text-muted">
+                        <i class="fas fa-bell-slash fa-3x mb-3"></i>
+                        <h6>No notifications</h6>
+                        <p class="small">Check back later for updates</p>
+                    </div>
+                `);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Failed to load notifications:', error);
+            console.error('Status:', xhr.status);
+            console.error('Response:', xhr.responseText);
+            
+            $('#notificationBadge').hide();
+            $('#notificationList').html(`
+                <div class="text-center p-3 text-danger">
+                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                    <p class="mb-0">Failed to load notifications</p>
+                    <small>${error}</small>
+                </div>
+            `);
+        }
+    });
+}
+
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+    }
+    return text;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToast(message, type = 'success') {
+    const toast = $(`
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+            <div class="toast align-items-center text-white bg-${type} border-0 show" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    setTimeout(() => toast.fadeOut().remove(), 3000);
+}
+</script>
+
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

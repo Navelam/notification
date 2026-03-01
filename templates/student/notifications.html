@@ -1,0 +1,550 @@
+{% extends "student/base_student.html" %}
+
+{% block title %}My Notifications - SPAS{% endblock %}
+
+{% block header_title %}Notifications{% endblock %}
+{% block header_subtitle %}Stay updated with important announcements{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-filters {
+        background: white;
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        border: 1px solid #e9ecef;
+    }
+    
+    .filter-badge {
+        display: inline-block;
+        padding: 8px 18px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-right: 10px;
+        border: 1px solid #e9ecef;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .filter-badge:hover {
+        background: #f3e9ff;
+        border-color: #6f42c1;
+    }
+    
+    .filter-badge.active {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border-color: transparent;
+    }
+    
+    .notification-card {
+        background: white;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+        animation: fadeIn 0.5s ease;
+        overflow: hidden;
+    }
+    
+    .notification-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(111, 66, 193, 0.1);
+        border-color: #6f42c1;
+    }
+    
+    .notification-card.unread {
+        border-left: 4px solid #6f42c1;
+        background: #f8f4ff;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .notification-header {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+    }
+    
+    .notification-icon {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+    
+    .notification-icon.fee { background: linear-gradient(135deg, #dc3545, #c82333); }
+    .notification-icon.meeting { background: linear-gradient(135deg, #fd7e14, #e06b00); }
+    .notification-icon.event { background: linear-gradient(135deg, #6f42c1, #5a32a3); }
+    .notification-icon.result { background: linear-gradient(135deg, #28a745, #218838); }
+    .notification-icon.timetable { background: linear-gradient(135deg, #17a2b8, #138496); }
+    .notification-icon.holiday { background: linear-gradient(135deg, #20c997, #1ba87e); }
+    .notification-icon.emergency { background: linear-gradient(135deg, #dc3545, #c82333); }
+    .notification-icon.general { background: linear-gradient(135deg, #6f42c1, #5a32a3); }
+    .notification-icon.exam { background: linear-gradient(135deg, #17a2b8, #138496); }
+    .notification-icon.room { background: linear-gradient(135deg, #28a745, #218838); }
+    .notification-icon.invigilation { background: linear-gradient(135deg, #ffc107, #e0a800); color: #2c3e50; }
+    .notification-icon.academic { background: linear-gradient(135deg, #20c997, #1ba87e); }
+    
+    .notification-content {
+        flex: 1;
+    }
+    
+    .notification-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 5px;
+        font-size: 1.1rem;
+    }
+    
+    .notification-message {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin-bottom: 10px;
+        line-height: 1.5;
+    }
+    
+    .notification-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 0.85rem;
+        color: #adb5bd;
+        flex-wrap: wrap;
+    }
+    
+    .notification-meta i {
+        margin-right: 5px;
+        color: #6f42c1;
+    }
+    
+    .type-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+        text-transform: uppercase;
+    }
+    
+    .type-fee { background: #dc3545; color: white; }
+    .type-meeting { background: #fd7e14; color: white; }
+    .type-event { background: #6f42c1; color: white; }
+    .type-result { background: #28a745; color: white; }
+    .type-timetable { background: #17a2b8; color: white; }
+    .type-holiday { background: #20c997; color: white; }
+    .type-emergency { background: #dc3545; color: white; }
+    .type-general { background: #6f42c1; color: white; }
+    .type-exam { background: #17a2b8; color: white; }
+    .type-room { background: #28a745; color: white; }
+    .type-invigilation { background: #ffc107; color: #2c3e50; }
+    .type-academic { background: #20c997; color: white; }
+    
+    .notification-footer {
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .read-status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .read-status.unread {
+        background: #6f42c1;
+        color: white;
+    }
+    
+    .read-status.read {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+    
+    .btn-mark-read {
+        background: transparent;
+        border: 1px solid #6f42c1;
+        color: #6f42c1;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .btn-mark-read:hover {
+        background: #6f42c1;
+        color: white;
+    }
+    
+    .btn-mark-all-read {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 30px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .btn-mark-all-read:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(111,66,193,0.3);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.02);
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h4 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+    
+    .loading-spinner {
+        text-align: center;
+        padding: 40px;
+    }
+    
+    .loading-spinner i {
+        font-size: 2rem;
+        color: #6f42c1;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header with Actions -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="text-purple mb-1"><i class="fas fa-bell me-2"></i>All Notifications</h4>
+        <p class="text-muted">Stay updated with important announcements</p>
+    </div>
+    <div>
+        <button class="btn-mark-all-read me-2" onclick="markAllAsRead()">
+            <i class="fas fa-check-double me-2"></i>Mark All as Read
+        </button>
+        <button class="btn btn-outline-purple" onclick="loadNotifications()">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="notification-filters">
+    <div class="d-flex flex-wrap align-items-center">
+        <span class="me-3 text-purple"><i class="fas fa-filter me-1"></i>Filter:</span>
+        <span class="filter-badge active" data-filter="all">All</span>
+        <span class="filter-badge" data-filter="unread">Unread</span>
+        <span class="filter-badge" data-filter="fee">Fee</span>
+        <span class="filter-badge" data-filter="exam">Exam</span>
+        <span class="filter-badge" data-filter="result">Results</span>
+        <span class="filter-badge" data-filter="event">Events</span>
+        <span class="filter-badge" data-filter="general">General</span>
+    </div>
+</div>
+
+<!-- Notifications Container -->
+<div id="notifications-container">
+    <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p class="text-muted">Loading notifications...</p>
+    </div>
+</div>
+
+<!-- Notification Detail Modal -->
+<div class="modal fade" id="notificationDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-purple text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-bell me-2"></i>Notification Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="notificationDetailContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Close
+                </button>
+                <button type="button" class="btn btn-sm btn-purple" id="markThisRead" onclick="markCurrentRead()">
+                    <i class="fas fa-check me-1"></i>Mark as Read
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let notificationsData = [];
+let currentFilter = 'all';
+
+$(document).ready(function() {
+    loadNotifications();
+    
+    // Filter click handlers
+    $('.filter-badge').on('click', function() {
+        $('.filter-badge').removeClass('active');
+        $(this).addClass('active');
+        currentFilter = $(this).data('filter');
+        filterNotifications();
+    });
+});
+
+function loadNotifications() {
+    $('#notifications-container').html(`
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p class="text-muted">Loading notifications...</p>
+        </div>
+    `);
+    
+    $.ajax({
+        url: '/api/notifications/list',
+        method: 'GET',
+        timeout: 5000,
+        success: function(response) {
+            console.log('Notifications loaded:', response);
+            
+            if (response.success && response.notifications) {
+                notificationsData = response.notifications;
+                filterNotifications();
+                updateSidebarCount();
+            } else {
+                showEmptyState();
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Failed to load notifications:', error);
+            $('#notifications-container').html(`
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle text-danger"></i>
+                    <h4>Failed to Load</h4>
+                    <p class="text-muted">Unable to load notifications. Please try again.</p>
+                    <button class="btn btn-purple" onclick="loadNotifications()">
+                        <i class="fas fa-sync-alt me-2"></i>Retry
+                    </button>
+                </div>
+            `);
+        }
+    });
+}
+
+function filterNotifications() {
+    let filtered = notificationsData;
+    
+    if (currentFilter === 'unread') {
+        filtered = notificationsData.filter(n => !n.is_read);
+    } else if (currentFilter !== 'all') {
+        filtered = notificationsData.filter(n => n.type === currentFilter);
+    }
+    
+    displayNotifications(filtered);
+}
+
+function displayNotifications(notifications) {
+    if (notifications.length === 0) {
+        showEmptyState();
+        return;
+    }
+    
+    let html = '';
+    notifications.forEach(function(notif) {
+        let iconClass = notif.icon_class || 'general';
+        let unreadClass = notif.is_read ? '' : 'unread';
+        let readStatus = notif.is_read ? 'read' : 'unread';
+        let readStatusText = notif.is_read ? 'Read' : 'Unread';
+        
+        html += `
+            <div class="notification-card ${unreadClass}" data-id="${notif.id}">
+                <div class="notification-header" onclick="showNotificationDetail(${notif.id})">
+                    <div class="notification-icon ${iconClass}">
+                        <i class="fas ${notif.icon || 'fa-bell'}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="notification-title">${escapeHtml(notif.title)}</h5>
+                                <span class="type-badge type-${notif.type}">${notif.type || 'General'}</span>
+                            </div>
+                            <small class="text-muted">${notif.time_ago}</small>
+                        </div>
+                        <p class="notification-message">${escapeHtml(truncateText(notif.message, 150))}</p>
+                        <div class="notification-meta">
+                            <span><i class="far fa-clock"></i> ${notif.time_ago}</span>
+                            <span class="read-status ${readStatus}">${readStatusText}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="notification-footer">
+                    ${!notif.is_read ? `
+                        <button class="btn-mark-read" onclick="event.stopPropagation(); markAsRead(${notif.id})">
+                            <i class="fas fa-check me-1"></i>Mark as Read
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#notifications-container').html(html);
+}
+
+function showEmptyState() {
+    $('#notifications-container').html(`
+        <div class="empty-state">
+            <i class="fas fa-bell-slash"></i>
+            <h4>No Notifications</h4>
+            <p class="text-muted">You don't have any notifications at the moment.</p>
+            <a href="{{ url_for('student.dashboard') }}" class="btn btn-purple">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    `);
+}
+
+function showNotificationDetail(notificationId) {
+    let notif = notificationsData.find(n => n.id == notificationId);
+    if (!notif) return;
+    
+    let iconClass = notif.icon_class || 'general';
+    let content = `
+        <div class="text-center mb-4">
+            <div class="notification-icon ${iconClass} d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                <i class="fas ${notif.icon || 'fa-bell'} fa-2x"></i>
+            </div>
+            <h5 class="fw-bold">${escapeHtml(notif.title)}</h5>
+            <span class="type-badge type-${notif.type}">${notif.type || 'General'}</span>
+        </div>
+        <p class="mb-3">${escapeHtml(notif.message)}</p>
+        <div class="bg-light p-3 rounded">
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted"><i class="far fa-calendar me-2"></i>Received:</span>
+                <span>${notif.time_ago}</span>
+            </div>
+        </div>
+    `;
+    
+    $('#notificationDetailContent').html(content);
+    $('#markThisRead').data('id', notificationId);
+    $('#notificationDetailModal').modal('show');
+}
+
+function markAsRead(notificationId) {
+    $.post(`/api/notifications/${notificationId}/read`, function(data) {
+        if (data.success) {
+            // Update local data
+            let notif = notificationsData.find(n => n.id == notificationId);
+            if (notif) notif.is_read = true;
+            
+            filterNotifications();
+            updateSidebarCount();
+            showToast('Notification marked as read', 'success');
+        }
+    }).fail(function() {
+        showToast('Failed to mark as read', 'danger');
+    });
+}
+
+function markAllAsRead() {
+    $.post('/api/notifications/mark-all-read', function(data) {
+        if (data.success) {
+            notificationsData.forEach(n => n.is_read = true);
+            filterNotifications();
+            updateSidebarCount();
+            showToast('All notifications marked as read', 'success');
+        }
+    }).fail(function() {
+        showToast('Failed to mark all as read', 'danger');
+    });
+}
+
+function markCurrentRead() {
+    let id = $('#markThisRead').data('id');
+    markAsRead(id);
+    $('#notificationDetailModal').modal('hide');
+}
+
+function updateSidebarCount() {
+    let unreadCount = notificationsData.filter(n => !n.is_read).length;
+    $('.badge-count').text(unreadCount);
+    if (unreadCount > 0) {
+        $('.badge-count').show();
+    } else {
+        $('.badge-count').hide();
+    }
+}
+
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+    }
+    return text;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToast(message, type) {
+    const toast = $(`
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+            <div class="toast align-items-center text-white bg-${type} border-0 show" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    setTimeout(() => toast.fadeOut().remove(), 3000);
+}
+
+// Auto-refresh every 30 seconds
+setInterval(loadNotifications, 30000);
+</script>
+{% endblock %}

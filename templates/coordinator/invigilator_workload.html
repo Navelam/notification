@@ -1,0 +1,191 @@
+{% extends "coordinator/base_coordinator.html" %}
+
+{% block title %}Invigilator Workload - SPAS{% endblock %}
+
+{% block header_title %}Invigilator Workload Analysis{% endblock %}
+{% block header_subtitle %}View teacher duty distribution{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Teacher Workload Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h3>{{ workload_data|length }}</h3>
+                                <small>Total Teachers</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h3>{{ workload_data|sum(attribute='assignments') }}</h3>
+                                <small>Total Duties</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h3>{{ "%.1f"|format(workload_data|sum(attribute='assignments') / workload_data|length if workload_data|length > 0 else 0) }}</h3>
+                                <small>Average per Teacher</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Workload Distribution Chart -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Duty Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 300px;">
+                            <canvas id="workloadChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Teacher Workload Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover" id="workloadTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Teacher Name</th>
+                                <th>Department</th>
+                                <th>Email</th>
+                                <th>Duties Assigned</th>
+                                <th>Workload %</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in workload_data %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <i class="fas fa-user-tie me-2 text-purple"></i>
+                                    {{ item.teacher.full_name }}
+                                </td>
+                                <td>{{ item.teacher.department.name if item.teacher.department else 'General' }}</td>
+                                <td>{{ item.teacher.email }}</td>
+                                <td>
+                                    <span class="badge {% if item.assignments > 5 %}bg-danger{% elif item.assignments > 3 %}bg-warning{% else %}bg-success{% endif %} p-2">
+                                        {{ item.assignments }} duties
+                                    </span>
+                                </td>
+                                <td style="width: 200px;">
+                                    <div class="progress" style="height: 20px;">
+                                        {% set percentage = (item.assignments / (workload_data|sum(attribute='assignments') / workload_data|length) * 100) if workload_data|length > 0 else 0 %}
+                                        <div class="progress-bar {% if percentage > 80 %}bg-danger{% elif percentage > 50 %}bg-warning{% else %}bg-success{% endif %}" 
+                                             style="width: {{ percentage }}%;">
+                                            {{ "%.1f"|format(percentage) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if item.assignments == 0 %}
+                                        <span class="badge bg-secondary">No Duties</span>
+                                    {% elif item.assignments <= 3 %}
+                                        <span class="badge bg-success">Light</span>
+                                    {% elif item.assignments <= 5 %}
+                                        <span class="badge bg-warning">Moderate</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Heavy</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    $('#workloadTable').DataTable({
+        pageLength: 25,
+        order: [[4, 'desc']],
+        language: {
+            search: "Search:",
+            lengthMenu: "Show _MENU_ entries"
+        }
+    });
+    
+    // Create workload chart
+    const ctx = document.getElementById('workloadChart').getContext('2d');
+    
+    // Prepare data
+    const labels = [
+        {% for item in workload_data[:10] %}
+            "{{ item.teacher.full_name.split()[0] }}",
+        {% endfor %}
+    ];
+    
+    const data = [
+        {% for item in workload_data[:10] %}
+            {{ item.assignments }},
+        {% endfor %}
+    ];
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Number of Invigilation Duties',
+                data: data,
+                backgroundColor: 'rgba(111, 66, 193, 0.6)',
+                borderColor: 'rgba(111, 66, 193, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Top 10 Teachers by Duty Count'
+                }
+            }
+        }
+    });
+});
+</script>
+
+<!-- Back Button -->
+<div class="row mt-3">
+    <div class="col-12">
+        <a href="{{ url_for('coordinator.view_all_invigilators') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Invigilators
+        </a>
+        <a href="{{ url_for('coordinator.invigilator_allocation') }}" class="btn btn-purple ms-2">
+            <i class="fas fa-plus-circle me-2"></i>New Allocation
+        </a>
+    </div>
+</div>
+{% endblock %}

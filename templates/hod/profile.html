@@ -1,0 +1,174 @@
+{% extends "hod/base_hod.html" %}
+
+{% block title %}My Profile - SPAS{% endblock %}
+
+{% block header_title %}My Profile{% endblock %}
+{% block header_subtitle %}View your profile information{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="profile-image mb-3">
+                    <div class="profile-avatar mx-auto" style="width: 150px; height: 150px; background: linear-gradient(135deg, #6f42c1, #9b59b6); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <span class="display-3 text-white">{{ current_user.full_name[0] }}</span>
+                    </div>
+                </div>
+                <h3 class="mb-1">{{ current_user.full_name }}</h3>
+                <p class="text-muted mb-2">@{{ current_user.username }}</p>
+                <div class="badge bg-purple mb-3 p-2">
+                    <i class="fas fa-user-tie me-1"></i>Head of Department
+                </div>
+                
+                <hr>
+                
+                <div class="text-start">
+                    <p>
+                        <i class="fas fa-envelope text-purple me-2"></i> 
+                        {{ current_user.email }}
+                    </p>
+                    <p>
+                        <i class="fas fa-phone text-purple me-2"></i> 
+                        {{ current_user.phone or 'Not provided' }}
+                    </p>
+                    <p>
+                        <i class="fas fa-building text-purple me-2"></i> 
+                        {{ department.name if department else 'Not assigned' }}
+                    </p>
+                    <p>
+                        <i class="fas fa-calendar text-purple me-2"></i> 
+                        Joined: {{ current_user.created_at.strftime('%d %B, %Y') if current_user.created_at else 'N/A' }}
+                    </p>
+                    <p>
+                        <i class="fas fa-clock text-purple me-2"></i> 
+                        Last Login: {{ current_user.last_login.strftime('%d %B, %Y at %I:%M %p') if current_user.last_login else 'First time' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-building me-2"></i>Department Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 200px;">Department Name:</th>
+                        <td>{{ department.name if department else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Department Code:</th>
+                        <td>{{ department.code if department else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Total Teachers:</th>
+                        <td>{{ teacher_count }}</td>
+                    </tr>
+                    <tr>
+                        <th>Total Students:</th>
+                        <td>{{ student_count }}</td>
+                    </tr>
+                    <tr>
+                        <th>Total Subjects:</th>
+                        <td>{{ subject_count }}</td>
+                    </tr>
+                    <tr>
+                        <th>Established:</th>
+                        <td>2005</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Department Performance Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="stat-card p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Average Marks</h6>
+                                    <h4 class="mb-0 text-purple">{{ avg_marks }}/20</h4>
+                                </div>
+                                <i class="fas fa-star fa-2x text-purple-soft"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="stat-card p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Pass Rate</h6>
+                                    <h4 class="mb-0 text-purple">{{ pass_rate }}%</h4>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x text-purple-soft"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="stat-card p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Attendance</h6>
+                                    <h4 class="mb-0 text-purple">{{ avg_attendance }}%</h4>
+                                </div>
+                                <i class="fas fa-clock fa-2x text-purple-soft"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Account Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-purple w-100 mb-2">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('auth.edit_profile') }}" class="btn btn-outline-purple w-100 mb-2">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: all 0.3s;
+        background: white;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.1);
+        border-color: #6f42c1 !important;
+    }
+    
+    .text-purple-soft {
+        color: #b5a0d9;
+    }
+    
+    .bg-purple-soft {
+        background: #f3e9ff;
+    }
+</style>
+{% endblock %}

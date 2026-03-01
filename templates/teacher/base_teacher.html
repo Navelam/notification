@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Teacher - SPAS{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/purple-theme.css') }}">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .teacher-sidebar {
+            width: 300px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            border-right: 1px solid #e9ecef;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            background: linear-gradient(135deg, #6f42c1, #9b59b6);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .sidebar-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+            font-weight: 600;
+            border: 3px solid white;
+        }
+        
+        .sidebar-header h4 {
+            margin: 10px 0 5px;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar-header p {
+            margin: 0;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 15px;
+        }
+        
+        .sidebar-section-title {
+            padding: 10px 25px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        
+        .sidebar-menu-item {
+            list-style: none;
+        }
+        
+        .sidebar-menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 25px;
+            color: #2c3e50;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            font-size: 0.95rem;
+        }
+        
+        .sidebar-menu-link i {
+            width: 25px;
+            margin-right: 10px;
+            color: #6f42c1;
+            font-size: 1.1rem;
+        }
+        
+        .sidebar-menu-link:hover {
+            background: #f3e9ff;
+            border-left-color: #6f42c1;
+            color: #6f42c1;
+        }
+        
+        .sidebar-menu-link.active {
+            background: #f3e9ff;
+            border-left-color: #6f42c1;
+            color: #6f42c1;
+            font-weight: 600;
+        }
+        
+        .sidebar-menu-link .chevron {
+            margin-left: auto;
+            font-size: 0.8rem;
+            transition: transform 0.3s;
+        }
+        
+        .sidebar-menu-link[aria-expanded="true"] .chevron {
+            transform: rotate(180deg);
+        }
+        
+        .submenu {
+            padding-left: 50px;
+            background: #f8f9fa;
+        }
+        
+        .submenu-link {
+            display: block;
+            padding: 10px 25px;
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            border-left: 2px solid transparent;
+        }
+        
+        .submenu-link:hover {
+            background: #f3e9ff;
+            color: #6f42c1;
+            border-left-color: #6f42c1;
+        }
+        
+        .submenu-link i {
+            width: 20px;
+            margin-right: 8px;
+            color: #9b59b6;
+            font-size: 0.85rem;
+        }
+        
+        .sidebar-menu-link.logout {
+            margin-top: 20px;
+            border-top: 1px solid #e9ecef;
+            padding-top: 20px;
+        }
+        
+        .sidebar-menu-link.logout i {
+            color: #dc3545;
+        }
+        
+        .sidebar-menu-link.logout:hover {
+            background: #fff5f5;
+        }
+        
+        .badge-count {
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-left: auto;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 300px;
+            padding: 30px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .top-header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title h2 {
+            color: #6f42c1;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .header-title p {
+            margin: 5px 0 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .user-details {
+            text-align: right;
+        }
+        
+        .user-details h6 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .user-details p {
+            margin: 5px 0 0;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6f42c1, #9b59b6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .content-area {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
+        }
+        
+        .page-title {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f3e9ff;
+        }
+        
+        .page-title h3 {
+            color: #6f42c1;
+            margin: 0;
+            font-size: 1.3rem;
+        }
+        
+        .page-title h3 i {
+            margin-right: 10px;
+        }
+        
+        /* Scrollbar */
+        .teacher-sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .teacher-sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .teacher-sidebar::-webkit-scrollbar-thumb {
+            background: #6f42c1;
+            border-radius: 5px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .teacher-sidebar {
+                width: 0;
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .top-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="teacher-sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-avatar">
+                {{ current_user.full_name[0] }}
+            </div>
+            <h4>{{ current_user.full_name }}</h4>
+            <p>@{{ current_user.username }}</p>
+            <p class="mt-2"><i class="fas fa-building"></i> {{ department.name if department else 'Department' }}</p>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <!-- MAIN - Dashboard -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">MAIN</div>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('teacher.dashboard') }}" 
+                       class="sidebar-menu-link {% if request.endpoint == 'teacher.dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                </li>
+            </div>
+            
+            <!-- STUDENTS - Dropdown -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">STUDENTS</div>
+                <li class="sidebar-menu-item">
+                    <a href="#studentsMenu" 
+                       class="sidebar-menu-link" 
+                       data-bs-toggle="collapse" 
+                       data-bs-target="#studentsMenu"
+                       aria-expanded="false">
+                        <i class="fas fa-users"></i>
+                        Students
+                        <i class="fas fa-chevron-down chevron ms-auto"></i>
+                    </a>
+                    <div class="collapse" id="studentsMenu">
+                        <a href="{{ url_for('teacher.students_list') }}" 
+                           class="submenu-link {% if request.endpoint == 'teacher.students_list' %}active{% endif %}">
+                            <i class="fas fa-list"></i>
+                            View All Students
+                        </a>
+                        <a href="{{ url_for('teacher.add_student') }}" 
+                           class="submenu-link {% if request.endpoint == 'teacher.add_student' %}active{% endif %}">
+                            <i class="fas fa-user-plus"></i>
+                            Add New Student
+                        </a>
+                    </div>
+                </li>
+            </div>
+            
+            <!-- ENTER MARKS - Dropdown -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">ENTER MARKS</div>
+                <li class="sidebar-menu-item">
+                    <a href="#marksMenu" 
+                       class="sidebar-menu-link" 
+                       data-bs-toggle="collapse" 
+                       data-bs-target="#marksMenu"
+                       aria-expanded="false">
+                        <i class="fas fa-pencil-alt"></i>
+                        Enter Marks
+                        <i class="fas fa-chevron-down chevron ms-auto"></i>
+                    </a>
+                    <div class="collapse" id="marksMenu">
+                        {% for subject in teacher_subjects %}
+                        <a href="{{ url_for('teacher.enter_marks', subject_id=subject.id) }}" 
+                           class="submenu-link">
+                            <i class="fas fa-edit"></i>
+                            {{ subject.name }} - Enter Marks
+                        </a>
+                        {% else %}
+                        <a href="#" class="submenu-link text-muted" style="pointer-events: none;">
+                            <i class="fas fa-info-circle"></i>
+                            No subjects assigned
+                        </a>
+                        {% endfor %}
+                    </div>
+                </li>
+            </div>
+            
+            <!-- ATTENDANCE REPORT - Dropdown -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">ATTENDANCE</div>
+                <li class="sidebar-menu-item">
+                    <a href="#attendanceMenu" 
+                       class="sidebar-menu-link" 
+                       data-bs-toggle="collapse" 
+                       data-bs-target="#attendanceMenu"
+                       aria-expanded="false">
+                        <i class="fas fa-calendar-check"></i>
+                        Attendance
+                        <i class="fas fa-chevron-down chevron ms-auto"></i>
+                    </a>
+                    <div class="collapse" id="attendanceMenu">
+                        {% for subject in teacher_subjects %}
+                        <a href="{{ url_for('teacher.attendance_report', subject_id=subject.id) }}" 
+                           class="submenu-link {% if request.endpoint == 'teacher.attendance_report' and subject.id == request.view_args.get('subject_id') %}active{% endif %}">
+                            <i class="fas fa-chart-line"></i>
+                            {{ subject.name }} - Report
+                        </a>
+                        {% else %}
+                        <a href="#" class="submenu-link text-muted" style="pointer-events: none;">
+                            <i class="fas fa-info-circle"></i>
+                            No subjects assigned
+                        </a>
+                        {% endfor %}
+                    </div>
+                </li>
+            </div>
+
+            <!-- RESULTS - Dropdown -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">RESULTS</div>
+                <li class="sidebar-menu-item">
+                    <a href="#resultsMenu" 
+                       class="sidebar-menu-link" 
+                       data-bs-toggle="collapse" 
+                       data-bs-target="#resultsMenu"
+                       aria-expanded="false">
+                        <i class="fas fa-chart-bar"></i>
+                        Results
+                        <i class="fas fa-chevron-down chevron ms-auto"></i>
+                    </a>
+                    <div class="collapse" id="resultsMenu">
+                        {% for subject in teacher_subjects %}
+                        <a href="{{ url_for('teacher.student_results', subject_id=subject.id) }}" 
+                           class="submenu-link {% if request.endpoint == 'teacher.student_results' and subject.id == request.view_args.get('subject_id') %}active{% endif %}">
+                            <i class="fas fa-chart-bar"></i>
+                            {{ subject.name }} - Results
+                        </a>
+                        {% else %}
+                        <a href="#" class="submenu-link text-muted" style="pointer-events: none;">
+                            <i class="fas fa-info-circle"></i>
+                            No subjects assigned
+                        </a>
+                        {% endfor %}
+                    </div>
+                </li>
+            </div>
+            
+            <!-- QUESTION PAPERS -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">QUESTION PAPERS</div>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('teacher.question_papers') }}" 
+                       class="sidebar-menu-link {% if request.endpoint == 'teacher.question_papers' %}active{% endif %}">
+                        <i class="fas fa-file-pdf"></i>
+                        Question Papers
+                    </a>
+                </li>
+            </div>
+            <!-- Add this in the MAIN section -->
+<li class="sidebar-menu-item">
+    <a href="{{ url_for('teacher.notifications_page') }}" 
+       class="sidebar-menu-link {% if request.endpoint == 'teacher.notifications_page' %}active{% endif %}">
+        <i class="fas fa-bell"></i> Notifications
+    </a>
+</li>
+            <!-- ACCOUNT Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">ACCOUNT</div>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('auth.profile') }}" class="sidebar-menu-link">
+                        <i class="fas fa-user-circle"></i>
+                        My Profile
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('auth.change_password') }}" class="sidebar-menu-link">
+                        <i class="fas fa-key"></i>
+                        Change Password
+                    </a>
+                </li>
+            </div>
+            
+            <!-- Logout -->
+            <li class="sidebar-menu-item">
+                <a href="{{ url_for('auth.logout') }}" class="sidebar-menu-link logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-header">
+            <div class="header-title">
+                <h2>{% block header_title %}Teacher Dashboard{% endblock %}</h2>
+                <p>{% block header_subtitle %}Welcome to your dashboard{% endblock %}</p>
+            </div>
+            <div class="user-info">
+                <div class="user-details">
+                    <h6>{{ current_user.full_name }}</h6>
+                    <p><i class="fas fa-building me-1"></i> {{ department.name if department else 'Department' }}</p>
+                </div>
+                <div class="user-avatar">
+                    {{ current_user.full_name[0] }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTables
+            $('.datatable').DataTable({
+                responsive: true,
+                pageLength: 10,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search..."
+                }
+            });
+            
+            // Auto-expand dropdown based on current URL
+            var currentUrl = window.location.href;
+            $('.collapse').each(function() {
+                var links = $(this).find('a');
+                links.each(function() {
+                    if (currentUrl.indexOf($(this).attr('href')) !== -1) {
+                        $(this).closest('.collapse').addClass('show');
+                        $(this).closest('.sidebar-menu-item').find('[data-bs-toggle="collapse"]').attr('aria-expanded', 'true');
+                    }
+                });
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

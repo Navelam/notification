@@ -1,0 +1,154 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}Add Student - SPAS{% endblock %}
+
+{% block header_title %}Add New Student{% endblock %}
+{% block header_subtitle %}Add a student to {{ department.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .form-title {
+        color: #6f42c1;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f3e9ff;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .form-label i {
+        color: #6f42c1;
+        width: 20px;
+        margin-right: 5px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+        border-color: #6f42c1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+    }
+    
+    .form-hint {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.3);
+    }
+    
+    .info-box {
+        background: #f3e9ff;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        border-left: 4px solid #6f42c1;
+    }
+    
+    .info-box i {
+        color: #6f42c1;
+        margin-right: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h4 class="form-title"><i class="fas fa-user-graduate me-2"></i>Student Information</h4>
+    
+    <form method="POST" action="{{ url_for('teacher.add_student') }}">
+        <div class="form-group">
+            <label class="form-label"><i class="fas fa-user"></i>Full Name</label>
+            <input type="text" name="name" class="form-control" placeholder="Enter student's full name" required>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label"><i class="fas fa-envelope"></i>Email</label>
+            <input type="email" name="email" class="form-control" placeholder="student@college.edu" required>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label"><i class="fas fa-phone"></i>Phone</label>
+            <input type="text" name="phone" class="form-control" placeholder="10 digit mobile number" pattern="[0-9]{10}" required>
+            <div class="form-hint">Enter 10 digit mobile number</div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-layer-group"></i>Semester</label>
+                    <select name="semester" class="form-control" required>
+                        <option value="">Select Semester</option>
+                        {% for i in range(1, 9) %}
+                        <option value="{{ i }}">Semester {{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-calendar"></i>Batch Year</label>
+                    <select name="batch_year" class="form-control" required>
+                        <option value="">Select Batch</option>
+                        {% for year in range(current_year-4, current_year+1) %}
+                        <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-hint">Year of admission</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <strong>Auto-generated:</strong> Username, password, registration number, and student ID will be automatically generated.
+        </div>
+        
+        <button type="submit" class="btn-submit">
+            <i class="fas fa-user-plus me-2"></i>Add Student
+        </button>
+    </form>
+</div>
+{% endblock %}

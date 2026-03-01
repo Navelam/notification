@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Public View{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Notification Card Styles */
+    .notification-card {
+        transition: all 0.3s ease;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-bottom: 20px;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .notification-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary-300);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .notification-header {
+        padding: 15px 20px;
+        background: linear-gradient(135deg, var(--primary-50), var(--white));
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .notification-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .notification-icon.fee { background: linear-gradient(135deg, #dc3545, #c82333); }
+    .notification-icon.meeting { background: linear-gradient(135deg, #fd7e14, #e06b00); }
+    .notification-icon.event { background: linear-gradient(135deg, #6f42c1, #5a32a3); }
+    .notification-icon.result { background: linear-gradient(135deg, #28a745, #218838); }
+    .notification-icon.timetable { background: linear-gradient(135deg, #17a2b8, #138496); }
+    .notification-icon.holiday { background: linear-gradient(135deg, #20c997, #1ba87e); }
+    .notification-icon.emergency { background: linear-gradient(135deg, #dc3545, #c82333); }
+    .notification-icon.general { background: linear-gradient(135deg, #6f42c1, #5a32a3); }
+
+    .notification-title {
+        flex: 1;
+    }
+
+    .notification-title h5 {
+        margin: 0;
+        color: var(--gray-900);
+        font-weight: 600;
+    }
+
+    .notification-title small {
+        color: var(--gray-600);
+        font-size: 0.85rem;
+    }
+
+    .notification-body {
+        padding: 20px;
+        background: white;
+    }
+
+    .notification-message {
+        color: var(--gray-700);
+        line-height: 1.6;
+        margin-bottom: 15px;
+        white-space: pre-line;
+    }
+
+    .notification-meta {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        padding-top: 15px;
+        border-top: 1px solid var(--gray-200);
+        font-size: 0.9rem;
+        color: var(--gray-600);
+    }
+
+    .notification-meta i {
+        color: var(--primary-500);
+        margin-right: 5px;
+    }
+
+    .type-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: var(--radius-full);
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+
+    .type-fee { background: #dc3545; color: white; }
+    .type-meeting { background: #fd7e14; color: white; }
+    .type-event { background: #6f42c1; color: white; }
+    .type-result { background: #28a745; color: white; }
+    .type-timetable { background: #17a2b8; color: white; }
+    .type-holiday { background: #20c997; color: white; }
+    .type-emergency { background: #dc3545; color: white; }
+    .type-general { background: #6f42c1; color: white; }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+    }
+
+    .empty-state i {
+        font-size: 5rem;
+        color: var(--gray-300);
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        color: var(--gray-800);
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: var(--gray-600);
+        margin-bottom: 20px;
+    }
+
+    .btn-outline-purple {
+        border: 2px solid var(--primary-500);
+        color: var(--primary-500);
+        background: transparent;
+        padding: 10px 25px;
+        border-radius: var(--radius-full);
+        font-weight: 600;
+        transition: var(--transition-base);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+   
+
+    @media (max-width: 768px) {
+        .notification-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .notification-meta {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-bell text-purple me-2"></i>Notifications</h2>
+            <p class="text-muted">View announcements and updates from the college</p>
+            <hr>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            {% if notifications %}
+                {% for notification in notifications %}
+                <div class="notification-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                    <div class="notification-header">
+                        <div class="notification-icon {{ notification.notification_type }}">
+                            <i class="fas {{ notification.get_icon() }}"></i>
+                        </div>
+                        <div class="notification-title">
+                            <h5>
+                                {{ notification.get_prefixed_title() }}
+                                <span class="type-badge type-{{ notification.notification_type }}">
+                                    {{ notification.notification_type|title }}
+                                </span>
+                            </h5>
+                            <small>
+                                <i class="far fa-clock me-1"></i>
+                                Posted {{ notification.get_time_ago() }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="notification-body">
+                        <div class="notification-message">
+                            {{ notification.get_prefixed_message()|replace('\n', '<br>')|safe }}
+                        </div>
+                        <div class="notification-meta">
+                            <span>
+                                <i class="fas fa-calendar-alt"></i>
+                                Valid from: {{ notification.start_date.strftime('%d %B %Y') }}
+                            </span>
+                            <span>
+                                <i class="fas fa-calendar-check"></i>
+                                Valid until: {{ notification.end_date.strftime('%d %B %Y') }}
+                            </span>
+                            <span>
+                                <i class="fas fa-users"></i>
+                                Target: {{ notification.target_role|title }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-bell-slash"></i>
+                    <h3>No Notifications</h3>
+                    <p>There are no public notifications at the moment. Please check back later.</p>
+                    <a href="{{ url_for('index') }}" class="btn-outline-purple">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Home
+                    </a>
+                </div>
+            {% endif %}
+            
+        
+
+<!-- Add AOS Animation -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({
+        duration: 800,
+        once: true
+    });
+</script>
+{% endblock %}

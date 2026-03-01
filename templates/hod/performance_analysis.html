@@ -1,0 +1,207 @@
+{% extends "hod/base_hod.html" %}
+
+{% block title %}Performance Analysis - SPAS{% endblock %}
+
+{% block header_title %}Performance Analysis{% endblock %}
+{% block header_subtitle %}Subject-wise performance analysis{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analysis-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    
+    .subject-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .subject-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(111, 66, 193, 0.1);
+        border-color: #6f42c1;
+    }
+    
+    .subject-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f3e9ff;
+    }
+    
+    .subject-header h5 {
+        color: #6f42c1;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .subject-code {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 3px 8px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+    }
+    
+    .stats-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        flex: 1;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-top: 5px;
+    }
+    
+    .progress-container {
+        margin: 15px 0;
+    }
+    
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background: #e9ecef;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(90deg, #6f42c1, #9b59b6);
+        border-radius: 4px;
+    }
+    
+    .risk-badge-sm {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .bg-danger { background: #dc3545; color: white; }
+    .bg-success { background: #28a745; color: white; }
+    .bg-warning { background: #ffc107; color: #2c3e50; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<!-- Summary Cards - Updated to use correct variable names -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6>Total Subjects</h6>
+                <h3>{{ total_subjects }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6>Subjects with Data</h6>
+                <h3>{{ subjects_with_data }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h6>Overall Avg Marks</h6>
+                {% set total_avg = subject_analysis|sum(attribute='avg_marks') %}
+                {% set count = subject_analysis|selectattr('avg_marks', '>', 0)|list|length %}
+                <h3>{{ (total_avg / count)|round(1) if count > 0 else 0 }}/20</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h6>Total At Risk</h6>
+                <h3>{{ total_risk_count }}</h3>  <!-- Use total_risk_count from route -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="analysis-grid">
+    {% for item in subject_analysis %}
+    <div class="subject-card">
+        <div class="subject-header">
+            <h5>{{ item.subject.name }}</h5>
+            <span class="subject-code">{{ item.subject.code }}</span>
+        </div>
+        
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-value">{{ item.avg_marks }}</div>
+                <div class="stat-label">Avg Marks</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ item.avg_attendance }}%</div>
+                <div class="stat-label">Attendance</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ item.total_students }}</div>
+                <div class="stat-label">Students</div>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-label">
+                <span>Performance</span>
+                <span>{{ item.performance_percent }}%</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" style="width: {{ item.performance_percent }}%"></div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <span class="text-muted small">At Risk:</span>
+            <span class="risk-badge-sm {% if item.risk_count > 0 %}bg-danger text-white{% else %}bg-success text-white{% endif %}">
+                {{ item.risk_count }} students
+            </span>
+        </div>
+        
+        {% if item.total_students == 0 %}
+        <div class="mt-2 text-center text-muted small">
+            <i class="fas fa-info-circle"></i> No performance data available
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="col-12 text-center text-muted py-5">
+        <i class="fas fa-chart-line fa-3x mb-3"></i>
+        <p>No subject analysis available</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

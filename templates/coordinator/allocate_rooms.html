@@ -1,0 +1,192 @@
+{% extends "coordinator/base_coordinator.html" %}
+
+{% block title %}Room Allocation - SPAS{% endblock %}
+
+{% block header_title %}Room Allocation{% endblock %}
+{% block header_subtitle %}Allocate rooms for exams - All dates or single date{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total Exam Dates</h5>
+                <h2 class="mb-0">{{ exam_dates|length }}</h2>
+                <small>Dates with exams</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total Students</h5>
+                <h2 class="mb-0">{{ total_students }}</h2>
+                <small>Available for allocation</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Buttons -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <a href="{{ url_for('coordinator.room_allocation_dashboard') }}" class="btn btn-outline-purple">
+                    <i class="fas fa-tachometer-alt me-2"></i>Room Dashboard
+                </a>
+                <a href="{{ url_for('coordinator.timetable_view') }}" class="btn btn-outline-info ms-2">
+                    <i class="fas fa-calendar-alt me-2"></i>View Timetable
+                </a>
+                <a href="{{ url_for('coordinator.dashboard') }}" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-home me-2"></i>Main Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Option 1: All Dates (Left Side) -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-purple">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>All Dates - Bulk Allocation</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-calendar-check fa-4x text-purple mb-3"></i>
+                    <h4>Allocate for ALL Exam Dates</h4>
+                    <p class="text-muted">
+                        This will allocate rooms for <strong>{{ exam_dates|length }} dates</strong> at once
+                    </p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>What will happen:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Clear existing allocations for ALL dates</li>
+                        <li>Create new rooms for each date</li>
+                        <li>Mix students from all departments</li>
+                        <li><strong>15 students per exam</strong> (based on 15 per semester)</li>
+                    </ul>
+                </div>
+                
+                {% if exam_dates %}
+                <div class="mt-3">
+                    <p><strong>Dates that will be allocated:</strong></p>
+                    <div class="row">
+                        {% for date in exam_dates[:6] %}
+                        <div class="col-md-6">
+                            <span class="badge bg-light text-dark p-2 mb-1 w-100">
+                                {{ date.strftime('%d %b %Y') }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                        {% if exam_dates|length > 6 %}
+                        <div class="col-12 text-center mt-2">
+                            <span class="text-muted">... and {{ exam_dates|length - 6 }} more dates</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('coordinator.allocate_all_dates') }}" class="mt-4">
+                    <button type="submit" class="btn btn-purple btn-lg w-100" 
+                            onclick="return confirm('Allocate rooms for ALL {{ exam_dates|length }} dates? This will overwrite existing allocations.')">
+                        <i class="fas fa-calendar-check me-2"></i>Allocate ALL Dates
+                    </button>
+                </form>
+                {% else %}
+                <div class="alert alert-warning mt-4">
+                    No exam dates found. Please create timetable first.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Option 2: Single Date (Right Side) -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-day me-2"></i>Single Date - Selective Allocation</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-calendar-plus fa-4x text-success mb-3"></i>
+                    <h4>Allocate for ONE Exam Date</h4>
+                    <p class="text-muted">
+                        Select a specific date from the dropdown below
+                    </p>
+                </div>
+                
+                <form method="POST" action="{{ url_for('coordinator.allocate_single_date') }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select Exam Date</label>
+                        <select name="exam_date" class="form-select" required>
+                            <option value="">-- Choose Date --</option>
+                            {% for date in exam_dates %}
+                            <option value="{{ date }}">{{ date.strftime('%A, %d %B %Y') }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="alert alert-info mb-3">
+                        <strong>For the selected date:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Clear existing allocations for that date only</li>
+                            <li>Create new rooms</li>
+                            <li>Mix students from all departments</li>
+                            <li><strong>15 students per exam</strong></li>
+                        </ul>
+                    </div>
+                    
+                    {% if exam_dates %}
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="fas fa-magic me-2"></i>Allocate Selected Date
+                    </button>
+                    {% else %}
+                    <button type="submit" class="btn btn-success btn-lg w-100" disabled>
+                        <i class="fas fa-magic me-2"></i>No Dates Available
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Room Structure Info -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-building me-2"></i>Room Structure</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for block in ['A', 'B', 'C', 'D', 'E', 'F'] %}
+                    <div class="col-md-2 mb-3">
+                        <div class="card text-center">
+                            <div class="card-header bg-secondary text-white py-2">
+                                <strong>Block {{ block }}</strong>
+                            </div>
+                            <div class="card-body py-2">
+                                <p class="mb-1 small">{{ block }}101 - {{ block }}115</p>
+                                <p class="mb-0 small">15 rooms</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="alert alert-success mt-3 mb-0">
+                    <i class="fas fa-calculator me-2"></i>
+                    <strong>Total Capacity:</strong> 6 blocks × 15 rooms × 20 seats = 1800 students
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

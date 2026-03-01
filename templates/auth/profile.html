@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - SPAS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="javascript:history.back()" class="btn btn-sm btn-outline-purple">
+                <i class="fas fa-arrow-left me-2"></i>Back
+            </a>
+            <span class="ms-2 text-muted">/ Profile</span>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="profile-pic mb-3">
+                        {% if current_user.profile_pic %}
+                        <img src="{{ current_user.profile_pic }}" class="rounded-circle" width="150" height="150" style="object-fit: cover;">
+                        {% else %}
+                        <div class="avatar-placeholder rounded-circle bg-purple text-white d-flex align-items-center justify-content-center mx-auto" 
+                             style="width:150px;height:150px;font-size:64px;">
+                            {{ current_user.full_name[0]|upper if current_user.full_name else current_user.username[0]|upper }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h4>{{ current_user.full_name or current_user.username }}</h4>
+                    <p class="text-muted mb-1">
+                        <i class="fas fa-tag me-1"></i>{{ current_user.role|title }}
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-envelope me-1"></i>{{ current_user.email }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-purple text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="180" class="text-purple">Username:</th>
+                            <td>{{ current_user.username }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-purple">Email:</th>
+                            <td>{{ current_user.email }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-purple">Full Name:</th>
+                            <td>{{ current_user.full_name or 'Not provided' }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-purple">Phone:</th>
+                            <td>
+                                {% if current_user.phone %}
+                                    {{ current_user.phone }}
+                                {% else %}
+                                    <span class="text-muted">Not provided</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-purple">Role:</th>
+                            <td><span class="badge bg-purple-soft text-purple">{{ current_user.role|title }}</span></td>
+                        </tr>
+                        <tr>
+                            <th class="text-purple">Department:</th>
+                            <td>
+                                {% if current_user.department %}
+                                    {% if department_obj %}
+                                        {{ department_obj.name }}
+                                    {% else %}
+                                        {{ current_user.department }}
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-purple">Account Created:</th>
+                            <td>
+                                {% if current_user.created_at %}
+                                    {{ current_user.created_at.strftime('%d %B %Y, %I:%M %p') }}
+                                {% else %}
+                                    <span class="text-muted">Not available</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-purple">Last Login:</th>
+                            <td>
+                                {% if current_user.last_login %}
+                                    {{ current_user.last_login.strftime('%d %B %Y, %I:%M %p') }}
+                                {% else %}
+                                    <span class="text-muted">First login</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('auth.change_password') }}" class="btn btn-warning">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Close
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-purple {
+    background: linear-gradient(135deg, #6f42c1, #9b59b6);
+    color: white;
+}
+.bg-purple-soft {
+    background: #f3e9ff;
+}
+.text-purple {
+    color: #6f42c1;
+}
+.btn-outline-purple {
+    border: 2px solid #6f42c1;
+    color: #6f42c1;
+    background: transparent;
+    transition: all 0.3s;
+}
+.btn-outline-purple:hover {
+    background: #6f42c1;
+    color: white;
+}
+.table th {
+    font-weight: 600;
+}
+.avatar-placeholder {
+    box-shadow: 0 5px 15px rgba(111, 66, 193, 0.3);
+}
+</style>
+{% endblock %}

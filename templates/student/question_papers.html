@@ -1,0 +1,233 @@
+{% extends "student/base_student.html" %}
+
+{% block title %}Question Papers - SPAS{% endblock %}
+
+{% block header_title %}Question Papers{% endblock %}
+{% block header_subtitle %}Download study materials{% endblock %}
+
+{% block extra_css %}
+<style>
+    .semester-section {
+        margin-bottom: 30px;
+    }
+    
+    .semester-header {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .semester-header h4 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .semester-header h4 i {
+        margin-right: 10px;
+    }
+    
+    .subject-section {
+        margin-bottom: 25px;
+    }
+    
+    .subject-title {
+        color: #6f42c1;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        border-bottom: 2px solid #f3e9ff;
+    }
+    
+    .paper-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .paper-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.1);
+        border-color: #6f42c1;
+    }
+    
+    .paper-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .paper-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .paper-type {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .paper-meta {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 10px;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .paper-meta i {
+        color: #6f42c1;
+        width: 18px;
+        margin-right: 5px;
+    }
+    
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 10px 0;
+    }
+    
+    .file-icon {
+        font-size: 1.5rem;
+        color: #6f42c1;
+    }
+    
+    .file-name {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+    }
+    
+    .file-size {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .btn-download {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 6px;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-download:hover {
+        background: #218838;
+        transform: translateY(-2px);
+        color: white;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 50px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if papers_by_subject %}
+    <!-- Group papers by semester -->
+    {% set semesters = {} %}
+    {% for subject_id, data in papers_by_subject.items() %}
+        {% set semester = data.subject.semester_id %}
+        {% if semester not in semesters %}
+            {% set _ = semesters.update({semester: []}) %}
+        {% endif %}
+        {% set _ = semesters[semester].append(data) %}
+    {% endfor %}
+    
+    <!-- Display papers by semester -->
+    {% for semester in range(1, student.current_semester + 1) %}
+        {% if semester in semesters %}
+        <div class="semester-section">
+            <div class="semester-header">
+                <h4><i class="fas fa-layer-group"></i> Semester {{ semester }}</h4>
+                <span class="badge bg-light text-purple">{{ semesters[semester]|length }} Subjects</span>
+            </div>
+            
+            {% for data in semesters[semester] %}
+            <div class="subject-section">
+                <h5 class="subject-title">
+                    <i class="fas fa-book me-2"></i>
+                    {{ data.subject.name }} ({{ data.subject.code }})
+                </h5>
+                
+                <div class="row">
+                    {% for paper in data.papers %}
+                    <div class="col-md-6">
+                        <div class="paper-card">
+                            <div class="paper-header">
+                                <span class="paper-title">{{ paper.title }}</span>
+                                <span class="paper-type">{{ paper.exam_type|replace('_', ' ')|title }}</span>
+                            </div>
+                            
+                            <div class="paper-meta">
+                                <span><i class="fas fa-calendar"></i> {{ paper.uploaded_at.strftime('%d %b, %Y') }}</span>
+                                <span><i class="fas fa-user"></i> {{ paper.uploader.full_name }}</span>
+                            </div>
+                            
+                            {% if paper.description %}
+                            <p class="text-muted small">{{ paper.description }}</p>
+                            {% endif %}
+                            
+                            <div class="file-info">
+                                <div class="file-icon">
+                                    <i class="fas {{ paper.get_file_icon() }}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="file-name">{{ paper.file_name }}</div>
+                                    <div class="file-size">{{ paper.get_file_size_display() }}</div>
+                                </div>
+                                <a href="{{ url_for('student.download_question_paper', paper_id=paper.id) }}" 
+                                   class="btn-download btn-sm">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endfor %}
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-file-alt"></i>
+    <h5>No Question Papers Available</h5>
+    <p class="text-muted">Question papers will appear here once teachers upload them.</p>
+</div>
+{% endif %}
+{% endblock %}

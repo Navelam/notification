@@ -1,0 +1,112 @@
+{% extends "hod/base_hod.html" %}
+
+{% block title %}Student Details - SPAS{% endblock %}
+
+{% block header_title %}Student Performance Details{% endblock %}
+{% block header_subtitle %}{{ student.name }} - {{ student.registration_number }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Student Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th>Name:</th>
+                        <td>{{ student.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Registration No:</th>
+                        <td>{{ student.registration_number }}</td>
+                    </tr>
+                    <tr>
+                        <th>Student ID:</th>
+                        <td>{{ student.student_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Course:</th>
+                        <td>{{ student.course.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Department:</th>
+                        <td>{{ student.department.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Current Semester:</th>
+                        <td>Semester {{ student.current_semester }}</td>
+                    </tr>
+                    <tr>
+                        <th>Admission Year:</th>
+<td>{{ student.admission_year }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ student.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Phone:</th>
+                        <td>{{ student.phone or 'Not provided' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Performance Records</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table datatable">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Attendance</th>
+                                <th>Internal 1</th>
+                                <th>Internal 2</th>
+                                <th>Seminar</th>
+                                <th>Assessment</th>
+                                <th>Total/50</th>
+                                <th>Final/25</th>
+                                <th>Risk Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for performance, subject in performances %}
+                            <tr>
+                                <td>{{ subject.name }}</td>
+                                <td>{{ performance.attendance }}%</td>
+                                <td>{{ performance.internal1 }}</td>
+                                <td>{{ performance.internal2 }}</td>
+                                <td>{{ performance.seminar }}</td>
+                                <td>{{ performance.assessment }}</td>
+                                <td><strong>{{ performance.total_marks }}</strong></td>
+                                <td><strong>{{ performance.final_internal }}</strong></td>
+                                <td>
+                                    <span class="badge-risk 
+                                        {% if performance.risk_status == 'Critical' %}badge-critical
+                                        {% elif performance.risk_status == 'High Risk' %}badge-high
+                                        {% elif performance.risk_status == 'Average' %}badge-average
+                                        {% else %}badge-safe{% endif %}">
+                                        {{ performance.risk_status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">No performance records found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

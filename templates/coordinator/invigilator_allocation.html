@@ -1,0 +1,162 @@
+{% extends "coordinator/base_coordinator.html" %}
+
+{% block title %}Invigilator Allocation - SPAS{% endblock %}
+
+{% block header_title %}Invigilator Allocation{% endblock %}
+{% block header_subtitle %}Assign teachers to invigilate exams{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Exam Dates</h5>
+                <h2 class="mb-0">{{ exam_dates|length }}</h2>
+                <small>Dates with exams</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Available Teachers</h5>
+                <h2 class="mb-0">{{ teachers|length }}</h2>
+                <small>Can be assigned</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">Dates with Assignments</h5>
+                <h2 class="mb-0">{{ assignments_summary|length }}</h2>
+                <small>Already allocated</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Buttons -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <a href="{{ url_for('coordinator.view_invigilators') }}" class="btn btn-outline-purple">
+                    <i class="fas fa-eye me-2"></i>View Assignments
+                </a>
+                <a href="{{ url_for('coordinator.room_allocation_dashboard') }}" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-door-open me-2"></i>Room Dashboard
+                </a>
+                <a href="{{ url_for('coordinator.dashboard') }}" class="btn btn-outline-info ms-2">
+                    <i class="fas fa-home me-2"></i>Main Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Option 1: All Dates -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-purple">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>All Dates - Bulk Allocation</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-users-cog fa-4x text-purple mb-3"></i>
+                    <h4>Assign Invigilators for ALL Exam Dates</h4>
+                    <p class="text-muted">
+                        This will assign invigilators for <strong>{{ exam_dates|length }} dates</strong> at once
+                    </p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>What will happen:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Clear all existing invigilator assignments</li>
+                        <li>Assign teachers to every room on every date</li>
+                        <li>Round-robin distribution for fairness</li>
+                        <li>One invigilator per room per session</li>
+                    </ul>
+                </div>
+                
+                <form method="POST" action="{{ url_for('coordinator.allocate_invigilators_all') }}" class="mt-4">
+                    <button type="submit" class="btn btn-purple btn-lg w-100" 
+                            onclick="return confirm('Assign invigilators for ALL {{ exam_dates|length }} dates? This will overwrite existing assignments.')">
+                        <i class="fas fa-calendar-check me-2"></i>Assign ALL Dates
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Option 2: Single Date -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-day me-2"></i>Single Date - Selective Allocation</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-plus fa-4x text-success mb-3"></i>
+                    <h4>Assign for ONE Exam Date</h4>
+                    <p class="text-muted">
+                        Select a specific date from the dropdown below
+                    </p>
+                </div>
+                
+                <form method="POST" action="{{ url_for('coordinator.allocate_invigilators_date') }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select Exam Date</label>
+                        <select name="exam_date" class="form-select" required>
+                            <option value="">-- Choose Date --</option>
+                            {% for date in exam_dates %}
+                            <option value="{{ date }}">{{ date.strftime('%A, %d %B %Y') }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="alert alert-info mb-3">
+                        <strong>For the selected date:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Clear existing assignments for that date only</li>
+                            <li>Assign teachers to all rooms</li>
+                            <li>Round-robin distribution</li>
+                        </ul>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="fas fa-magic me-2"></i>Assign Selected Date
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Existing Assignments Summary -->
+{% if assignments_summary %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Current Assignments Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for summary in assignments_summary %}
+                    <div class="col-md-3 mb-2">
+                        <span class="badge bg-info p-2">
+                            {{ summary.exam_date.strftime('%d %b %Y') }}: {{ summary.room_count }} rooms
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

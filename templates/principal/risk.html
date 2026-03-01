@@ -1,0 +1,417 @@
+{% extends "principal/base_principal.html" %}
+
+{% block title %}Risk Monitoring - Principal{% endblock %}
+
+{% block header_title %}Risk Monitoring{% endblock %}
+{% block header_subtitle %}Monitor students by risk level{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* =====================================================
+       COMPACT RISK MONITORING WITH PAGINATION
+       ===================================================== */
+    
+    .filter-section {
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 15px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 140px;
+    }
+    
+    .filter-group label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #6f42c1;
+        margin-bottom: 2px;
+        display: block;
+    }
+    
+    .filter-select, .filter-input {
+        width: 100%;
+        padding: 5px 8px;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        font-size: 0.8rem;
+    }
+    
+    .btn-apply {
+        background: #6f42c1;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    
+    .btn-reset {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    
+    .btn-export {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    
+    .risk-summary {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .risk-pill {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .risk-critical { background: #dc3545; color: white; }
+    .risk-high { background: #fd7e14; color: white; }
+    .risk-average { background: #ffc107; color: #2c3e50; }
+    .risk-safe { background: #28a745; color: white; }
+    .risk-best { background: #6f42c1; color: white; }
+    .risk-nodata { background: #6c757d; color: white; }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        overflow: hidden;
+        margin-bottom: 15px;
+    }
+    
+    .risk-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.7rem;
+    }
+    
+    .risk-table thead {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+    }
+    
+    .risk-table th {
+        padding: 6px 4px;
+        font-weight: 600;
+        text-align: left;
+    }
+    
+    .risk-table td {
+        padding: 5px 4px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .student-id {
+        font-family: monospace;
+        background: #f3e9ff;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+    
+    .risk-badge {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.65rem;
+        display: inline-block;
+        min-width: 60px;
+        text-align: center;
+    }
+    
+    .attendance-badge {
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 0.65rem;
+    }
+    
+    .attendance-good { background: #28a745; color: white; }
+    .attendance-warning { background: #ffc107; color: #2c3e50; }
+    .attendance-danger { background: #dc3545; color: white; }
+    
+    .grade-badge {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        font-size: 0.75rem;
+    }
+    
+    .pagination {
+        display: flex;
+        gap: 3px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .page-link {
+        display: block;
+        padding: 3px 7px;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        color: #6f42c1;
+        text-decoration: none;
+        font-size: 0.7rem;
+    }
+    
+    .page-item.active .page-link {
+        background: #6f42c1;
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .filter-form {
+            flex-direction: column;
+        }
+        .filter-group {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Risk Summary Pills -->
+<div class="risk-summary">
+    <button class="risk-pill risk-critical" onclick="filterByRisk('Critical')">
+        Critical <span class="badge bg-white text-dark ms-1">{{ risk_counts.Critical }}</span>
+    </button>
+    <button class="risk-pill risk-high" onclick="filterByRisk('High Risk')">
+        High Risk <span class="badge bg-white text-dark ms-1">{{ risk_counts['High Risk'] }}</span>
+    </button>
+    <button class="risk-pill risk-average" onclick="filterByRisk('Average')">
+        Average <span class="badge bg-white text-dark ms-1">{{ risk_counts.Average }}</span>
+    </button>
+    <button class="risk-pill risk-safe" onclick="filterByRisk('Safe')">
+        Safe <span class="badge bg-white text-dark ms-1">{{ risk_counts.Safe }}</span>
+    </button>
+    <button class="risk-pill risk-best" onclick="filterByRisk('Best')">
+        Best <span class="badge bg-white text-dark ms-1">{{ risk_counts.Best }}</span>
+    </button>
+    <button class="risk-pill risk-nodata" onclick="filterByRisk('No Data')">
+        No Data <span class="badge bg-white text-dark ms-1">{{ risk_counts['No Data'] }}</span>
+    </button>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <form method="GET" action="{{ url_for('principal.risk_monitoring') }}" class="filter-form">
+        <div class="filter-group">
+            <label><i class="fas fa-building me-1"></i> Department</label>
+            <select name="department" class="filter-select" onchange="this.form.submit()">
+                <option value="all" {% if selected_dept == 'all' %}selected{% endif %}>All</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if selected_dept == dept.id|string %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label><i class="fas fa-layer-group me-1"></i> Semester</label>
+            <select name="semester" class="filter-select" onchange="this.form.submit()">
+                <option value="all" {% if selected_sem == 'all' %}selected{% endif %}>All</option>
+                {% for sem in semesters %}
+                <option value="{{ sem }}" {% if selected_sem == sem %}selected{% endif %}>
+                    Sem {{ sem }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label><i class="fas fa-exclamation-triangle me-1"></i> Risk</label>
+            <select name="risk" class="filter-select" onchange="this.form.submit()">
+                <option value="all" {% if selected_risk == 'all' %}selected{% endif %}>All</option>
+                <option value="Critical" {% if selected_risk == 'Critical' %}selected{% endif %}>Critical</option>
+                <option value="High Risk" {% if selected_risk == 'High Risk' %}selected{% endif %}>High Risk</option>
+                <option value="Average" {% if selected_risk == 'Average' %}selected{% endif %}>Average</option>
+                <option value="Safe" {% if selected_risk == 'Safe' %}selected{% endif %}>Safe</option>
+                <option value="Best" {% if selected_risk == 'Best' %}selected{% endif %}>Best</option>
+                <option value="No Data" {% if selected_risk == 'No Data' %}selected{% endif %}>No Data</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label><i class="fas fa-search me-1"></i> Search</label>
+            <input type="text" name="search" class="filter-input" value="{{ search_query }}" placeholder="Name or Reg No...">
+        </div>
+        
+        <div class="filter-group" style="flex: 0 0 auto;">
+            <button type="submit" class="btn-apply">
+                <i class="fas fa-search me-1"></i> Search
+            </button>
+            <a href="{{ url_for('principal.risk_monitoring') }}" class="btn-reset ms-1">
+                <i class="fas fa-redo-alt me-1"></i> Reset
+            </a>
+        </div>
+        
+        <div class="filter-group" style="flex: 0 0 auto;">
+            <button type="button" class="btn-export" onclick="exportToCSV()">
+                <i class="fas fa-download me-1"></i> Export
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Search Result Info -->
+{% if search_query %}
+<div class="alert alert-info py-1 mb-2" style="font-size: 0.8rem;">
+    <i class="fas fa-search me-1"></i> Showing results for: <strong>"{{ search_query }}"</strong>
+</div>
+{% endif %}
+
+<!-- Students Table -->
+<div class="table-container">
+    <table class="risk-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Reg No</th>
+                <th>Name</th>
+                <th>Dept</th>
+                <th>Sem</th>
+                <th>Subject</th>
+                <th>Code</th>
+                <th>Marks</th>
+                <th>Att</th>
+                <th>Grade</th>
+                <th>Risk</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in student_data %}
+            <tr>
+                <td><span class="student-id">{{ student.student_id }}</span></td>
+                <td>{{ student.reg_number }}</td>
+                <td>{{ student.name[:15] }}</td>
+                <td>{{ student.department[:8] }}</td>
+                <td>{{ student.semester }}</td>
+                <td>{{ student.subject[:12] }}</td>
+                <td><span class="badge bg-purple-soft text-purple">{{ student.subject_code }}</span></td>
+                <td><strong>{{ student.marks }}</strong></td>
+                <td>
+                    <span class="attendance-badge 
+                        {% if student.attendance >= 75 %}attendance-good
+                        {% elif student.attendance >= 70 %}attendance-warning
+                        {% else %}attendance-danger{% endif %}">
+                        {{ student.attendance }}%
+                    </span>
+                </td>
+                <td><span class="grade-badge">{{ student.grade }}</span></td>
+                <td>
+                    <span class="risk-badge risk-{{ student.risk|lower|replace(' ', '') }}">
+                        {{ student.risk }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('principal.student_details', student_id=student.id) }}" class="btn btn-sm btn-outline-purple py-0 px-1" style="font-size: 0.65rem;">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="12" class="text-center py-4 text-muted">
+                    <i class="fas fa-users-slash fa-2x mb-2"></i>
+                    <p>No students found</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div class="pagination-container">
+    <div class="page-info">
+        Showing {{ ((current_page - 1) * per_page) + 1 }} to 
+        {{ [current_page * per_page, total_records]|min }} of {{ total_records }} students
+    </div>
+    
+    <ul class="pagination">
+        <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('principal.risk_monitoring', page=1, department=selected_dept, semester=selected_sem, risk=selected_risk, search=search_query) }}">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+        </li>
+        <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('principal.risk_monitoring', page=current_page-1, department=selected_dept, semester=selected_sem, risk=selected_risk, search=search_query) }}">
+                <i class="fas fa-angle-left"></i>
+            </a>
+        </li>
+        
+        {% for p in range([1, current_page-2]|max, [total_pages+1, current_page+3]|min) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('principal.risk_monitoring', page=p, department=selected_dept, semester=selected_sem, risk=selected_risk, search=search_query) }}">
+                {{ p }}
+            </a>
+        </li>
+        {% endfor %}
+        
+        <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('principal.risk_monitoring', page=current_page+1, department=selected_dept, semester=selected_sem, risk=selected_risk, search=search_query) }}">
+                <i class="fas fa-angle-right"></i>
+            </a>
+        </li>
+        <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('principal.risk_monitoring', page=total_pages, department=selected_dept, semester=selected_sem, risk=selected_risk, search=search_query) }}">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<script>
+function filterByRisk(risk) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('risk', risk);
+    url.searchParams.set('page', 1);
+    window.location.href = url.toString();
+}
+
+function exportToCSV() {
+    const params = new URLSearchParams(window.location.search);
+    window.location.href = "{{ url_for('principal.export_risk_report') }}?" + params.toString();
+}
+</script>
+{% endblock %}

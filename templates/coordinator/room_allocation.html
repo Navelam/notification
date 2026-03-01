@@ -1,0 +1,178 @@
+{% extends "coordinator/base_coordinator.html" %}
+
+{% block title %}Room Allocation - {{ date }} - SPAS{% endblock %}
+
+{% block header_title %}Room Allocation for {{ date_obj.strftime('%A, %d %B %Y') }}{% endblock %}
+{% block header_subtitle %}View rooms and seating arrangements{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Morning Session (10AM)</h5>
+                <h3>{{ morning_rooms_count }}</h3>
+                <p class="mb-0">{{ morning_count }} students</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5>Afternoon Session (2PM)</h5>
+                <h3>{{ afternoon_rooms_count }}</h3>
+                <p class="mb-0">{{ afternoon_count }} students</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Total Rooms</h5>
+                <h3>{{ morning_rooms_count + afternoon_rooms_count }}</h3>
+                <p class="mb-0">Across both sessions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5>Total Students</h5>
+                <h3>{{ morning_count + afternoon_count }}</h3>
+                <p class="mb-0">Allocated for {{ date }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <a href="{{ url_for('coordinator.room_allocation_dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#clearModal">
+                    <i class="fas fa-trash-alt me-2"></i>Clear All for {{ date }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Morning Session Rooms -->
+{% if morning_rooms %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Morning Session (10:00 AM) - {{ morning_rooms_count }} Rooms</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for room in morning_rooms %}
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 {% if room.total_students == room.capacity %}border-success{% else %}border-warning{% endif %}">
+                            <div class="card-header bg-light">
+                                <strong>{{ room.room_number }}</strong>
+                                <span class="badge bg-secondary float-end">Block {{ room.block }}</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-1">
+                                    <i class="fas fa-users me-1"></i> 
+                                    {{ room.total_students }}/{{ room.capacity }} students
+                                </p>
+                                <div class="progress mb-2" style="height: 5px;">
+                                    <div class="progress-bar bg-success" style="width: {{ (room.total_students / room.capacity * 100) }}%"></div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <a href="{{ url_for('coordinator.view_seating', date=date, time='10AM', room=room.room_number) }}" 
+                                   class="btn btn-sm btn-purple w-100">View Seating</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Afternoon Session Rooms -->
+{% if afternoon_rooms %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Afternoon Session (2:00 PM) - {{ afternoon_rooms_count }} Rooms</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for room in afternoon_rooms %}
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100 {% if room.total_students == room.capacity %}border-success{% else %}border-info{% endif %}">
+                            <div class="card-header bg-light">
+                                <strong>{{ room.room_number }}</strong>
+                                <span class="badge bg-secondary float-end">Block {{ room.block }}</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-1">
+                                    <i class="fas fa-users me-1"></i> 
+                                    {{ room.total_students }}/{{ room.capacity }} students
+                                </p>
+                                <div class="progress mb-2" style="height: 5px;">
+                                    <div class="progress-bar bg-success" style="width: {{ (room.total_students / room.capacity * 100) }}%"></div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <a href="{{ url_for('coordinator.view_seating', date=date, time='2PM', room=room.room_number) }}" 
+                                   class="btn btn-sm btn-purple w-100">View Seating</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- No Allocations Message -->
+{% if not morning_rooms and not afternoon_rooms %}
+<div class="alert alert-info text-center py-5">
+    <i class="fas fa-door-open fa-4x mb-3"></i>
+    <h4>No Room Allocations Found</h4>
+    <p class="mb-3">No rooms have been allocated for {{ date_obj.strftime('%d %B %Y') }}.</p>
+    <a href="{{ url_for('coordinator.allocate_rooms') }}" class="btn btn-purple">
+        Allocate Rooms Now
+    </a>
+</div>
+{% endif %}
+
+<!-- Clear Modal -->
+<div class="modal fade" id="clearModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Clear All Allocations for {{ date }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to clear all allocations for <strong>{{ date_obj.strftime('%d %B %Y') }}</strong>?</p>
+                <p class="text-danger fw-bold">This action cannot be undone!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('coordinator.clear_room_allocation', date=date) }}">
+                    <button type="submit" class="btn btn-danger">Yes, Clear All</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

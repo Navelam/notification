@@ -1,0 +1,619 @@
+{% extends "hod/base_hod.html" %}
+
+{% block title %}Notifications - HOD{% endblock %}
+
+{% block header_title %}Department Notifications{% endblock %}
+{% block header_subtitle %}Manage department communications{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #f3e9ff, #ffffff);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-item {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .stat-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(111,66,193,0.1);
+        border-color: #6f42c1;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #6f42c1;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+    
+    .filter-section {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .notification-list {
+        max-height: 600px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    
+    .notification-list::-webkit-scrollbar {
+        width: 5px;
+    }
+    
+    .notification-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .notification-list::-webkit-scrollbar-thumb {
+        background: #6f42c1;
+        border-radius: 10px;
+    }
+    
+    .notification-item {
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .notification-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(111,66,193,0.1);
+        border-color: #6f42c1;
+    }
+    
+    .notification-item.unread {
+        border-left: 4px solid #6f42c1;
+        background: #f8f4ff;
+    }
+    
+    .notification-item.urgent {
+        border-left: 4px solid #dc3545;
+        background: #fff5f5;
+    }
+    
+    .notification-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .notification-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+    
+    .notification-title {
+        flex: 1;
+    }
+    
+    .notification-title h5 {
+        margin: 0 0 5px 0;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .notification-meta {
+        display: flex;
+        gap: 15px;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .notification-meta i {
+        margin-right: 3px;
+        color: #6f42c1;
+    }
+    
+    .notification-body {
+        margin-bottom: 15px;
+        color: #6c757d;
+        line-height: 1.6;
+    }
+    
+    .notification-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .target-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .target-all { background: #6f42c1; color: white; }
+    .target-hod { background: #28a745; color: white; }
+    .target-teacher { background: #17a2b8; color: white; }
+    .target-student { background: #ffc107; color: #2c3e50; }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .btn-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e9ecef;
+        background: transparent;
+        transition: all 0.3s;
+    }
+    
+    .btn-icon:hover {
+        background: #6f42c1;
+        color: white;
+        border-color: #6f42c1;
+    }
+    
+    .quick-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-create {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40,167,69,0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h4 class="text-purple mb-2"><i class="fas fa-bell me-2"></i>Department Notifications</h4>
+            <p class="text-muted mb-0">Manage and track all communications for your department</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="quick-actions">
+                <a href="{{ url_for('coordinator.create_notification') }}" class="btn-create">
+                    <i class="fas fa-plus-circle me-2"></i>Create Notification
+                </a>
+                <a href="{{ url_for('coordinator.notifications_dashboard') }}" class="btn btn-outline-purple">
+                    <i class="fas fa-cog"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="stats-grid">
+    <div class="stat-item">
+        <div class="stat-number" id="totalCount">0</div>
+        <div class="stat-label">Total Notifications</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number" id="unreadCount">0</div>
+        <div class="stat-label">Unread</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number" id="urgentCount">0</div>
+        <div class="stat-label">Urgent</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number" id="hodSpecific">0</div>
+        <div class="stat-label">For HOD</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number" id="deptWide">0</div>
+        <div class="stat-label">Department Wide</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-section">
+    <div class="row">
+        <div class="col-md-4">
+            <label class="form-label text-purple"><i class="fas fa-filter me-1"></i>Filter by Type</label>
+            <select class="form-select" id="typeFilter">
+                <option value="all">All Types</option>
+                <option value="meeting">Meetings</option>
+                <option value="exam">Exams</option>
+                <option value="result">Results</option>
+                <option value="timetable">Timetable</option>
+                <option value="general">General</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label text-purple"><i class="fas fa-users me-1"></i>Filter by Target</label>
+            <select class="form-select" id="targetFilter">
+                <option value="all">All Targets</option>
+                <option value="hod">HOD Only</option>
+                <option value="teacher">Teachers</option>
+                <option value="student">Students</option>
+                <option value="all">Everyone</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label text-purple"><i class="fas fa-calendar me-1"></i>Time Period</label>
+            <select class="form-select" id="timeFilter">
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="text-purple"><i class="fas fa-list me-2"></i>Notification List</h5>
+            <div>
+                <button class="btn btn-sm btn-outline-purple me-2" onclick="markAllAsRead()">
+                    <i class="fas fa-check-double me-1"></i>Mark All Read
+                </button>
+                <button class="btn btn-sm btn-outline-purple" onclick="refreshNotifications()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="notification-list" id="notificationList">
+            <div class="text-center py-5">
+                <div class="spinner-border text-purple" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading notifications...</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Quick Stats Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-purple text-white">
+                <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Quick Stats</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="statsChart" height="200"></canvas>
+            </div>
+        </div>
+        
+        <!-- Department Summary -->
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h6 class="mb-0"><i class="fas fa-building me-2"></i>Department Summary</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Teachers</small>
+                    <h5>{{ total_teachers }}</h5>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Students</small>
+                    <h5>{{ total_students }}</h5>
+                </div>
+                <div>
+                    <small class="text-muted">Active Notifications</small>
+                    <h5 id="activeCount">0</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let notificationsData = [];
+let statsChart = null;
+
+$(document).ready(function() {
+    loadHODNotifications();
+    
+    $('#typeFilter, #targetFilter, #timeFilter').on('change', function() {
+        filterNotifications();
+    });
+});
+
+function loadHODNotifications() {
+    $.ajax({
+        url: '/api/notifications/list',
+        method: 'GET',
+        success: function(data) {
+            if (data.success && data.notifications) {
+                notificationsData = data.notifications;
+                updateStats();
+                filterNotifications();
+                updateChart();
+            }
+        },
+        error: function() {
+            showError('Failed to load notifications');
+        }
+    });
+}
+
+function updateStats() {
+    let total = notificationsData.length;
+    let unread = notificationsData.filter(n => !n.is_read).length;
+    let urgent = notificationsData.filter(n => n.type === 'emergency' || n.type === 'meeting').length;
+    let hodSpecific = notificationsData.filter(n => n.target_role === 'hod').length;
+    let deptWide = notificationsData.filter(n => n.target_role === 'all' || n.target_role === 'teacher').length;
+    let active = notificationsData.filter(n => {
+        let date = new Date(n.end_date);
+        return date > new Date();
+    }).length;
+    
+    $('#totalCount').text(total);
+    $('#unreadCount').text(unread);
+    $('#urgentCount').text(urgent);
+    $('#hodSpecific').text(hodSpecific);
+    $('#deptWide').text(deptWide);
+    $('#activeCount').text(active);
+}
+
+function filterNotifications() {
+    let type = $('#typeFilter').val();
+    let target = $('#targetFilter').val();
+    let time = $('#timeFilter').val();
+    
+    let filtered = notificationsData;
+    
+    // Type filter
+    if (type !== 'all') {
+        filtered = filtered.filter(n => n.type === type);
+    }
+    
+    // Target filter
+    if (target !== 'all') {
+        filtered = filtered.filter(n => n.target_role === target);
+    }
+    
+    // Time filter
+    if (time !== 'all') {
+        let now = new Date();
+        filtered = filtered.filter(n => {
+            let date = new Date(n.created_at);
+            if (time === 'today') {
+                return date.toDateString() === now.toDateString();
+            } else if (time === 'week') {
+                let weekAgo = new Date(now.setDate(now.getDate() - 7));
+                return date >= weekAgo;
+            } else if (time === 'month') {
+                let monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+                return date >= monthAgo;
+            }
+            return true;
+        });
+    }
+    
+    displayNotifications(filtered);
+}
+
+function displayNotifications(notifications) {
+    if (notifications.length === 0) {
+        $('#notificationList').html(`
+            <div class="alert alert-info text-center py-5">
+                <i class="fas fa-bell-slash fa-4x mb-3"></i>
+                <h5>No Notifications Found</h5>
+                <p class="mb-0">Try changing your filters</p>
+            </div>
+        `);
+        return;
+    }
+    
+    let html = '';
+    notifications.forEach(function(notif) {
+        let unreadClass = notif.is_read ? '' : 'unread';
+        let urgentClass = notif.type === 'emergency' ? 'urgent' : '';
+        let targetClass = `target-${notif.target_role || 'all'}`;
+        
+        html += `
+            <div class="notification-item ${unreadClass} ${urgentClass}" onclick="showNotificationDetail(${notif.id})">
+                <div class="notification-header">
+                    <div class="notification-icon ${notif.icon_class || 'general'}">
+                        <i class="fas ${notif.icon || 'fa-bell'}"></i>
+                    </div>
+                    <div class="notification-title">
+                        <h5>${escapeHtml(notif.title)}</h5>
+                        <div class="notification-meta">
+                            <span><i class="far fa-clock"></i> ${notif.time_ago}</span>
+                            <span><i class="fas fa-tag"></i> ${notif.type || 'General'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="notification-body">
+                    ${escapeHtml(truncateText(notif.message, 150))}
+                </div>
+                <div class="notification-footer">
+                    <div>
+                        <span class="target-badge ${targetClass}">
+                            <i class="fas fa-users me-1"></i>${notif.target_role || 'All'}
+                        </span>
+                    </div>
+                    <div class="action-buttons">
+                        ${!notif.is_read ? `
+                            <button class="btn-icon" onclick="event.stopPropagation(); markAsRead(${notif.id})" title="Mark as Read">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        ` : ''}
+                        ${notif.link && notif.link !== '#' ? `
+                            <a href="${notif.link}" class="btn-icon" target="_blank" onclick="event.stopPropagation()" title="View Details">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#notificationList').html(html);
+}
+
+function showNotificationDetail(notificationId) {
+    let notif = notificationsData.find(n => n.id == notificationId);
+    if (!notif) return;
+    
+    // You could implement a modal here for detailed view
+    alert(`Title: ${notif.title}\n\nMessage: ${notif.message}`);
+}
+
+function markAsRead(notificationId) {
+    $.post(`/api/notifications/${notificationId}/read`, function(data) {
+        if (data.success) {
+            let notif = notificationsData.find(n => n.id == notificationId);
+            if (notif) notif.is_read = true;
+            updateStats();
+            filterNotifications();
+            showToast('Marked as read', 'success');
+        }
+    });
+}
+
+function markAllAsRead() {
+    $.post('/api/notifications/mark-all-read', function(data) {
+        if (data.success) {
+            notificationsData.forEach(n => n.is_read = true);
+            updateStats();
+            filterNotifications();
+            showToast('All notifications marked as read', 'success');
+        }
+    });
+}
+
+function refreshNotifications() {
+    loadHODNotifications();
+}
+
+function updateChart() {
+    if (statsChart) statsChart.destroy();
+    
+    let ctx = document.getElementById('statsChart').getContext('2d');
+    let types = {};
+    notificationsData.forEach(n => {
+        types[n.type] = (types[n.type] || 0) + 1;
+    });
+    
+    statsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(types),
+            datasets: [{
+                data: Object.values(types),
+                backgroundColor: [
+                    '#6f42c1', '#fd7e14', '#28a745', 
+                    '#17a2b8', '#dc3545', '#ffc107'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { size: 11 } }
+                }
+            }
+        }
+    });
+}
+
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+    }
+    return text;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToast(message, type) {
+    const toast = $(`
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+            <div class="toast align-items-center text-white bg-${type} border-0 show" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    setTimeout(() => toast.fadeOut().remove(), 3000);
+}
+
+function showError(message) {
+    $('#notificationList').html(`
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            ${message}
+        </div>
+    `);
+}
+</script>
+{% endblock %}

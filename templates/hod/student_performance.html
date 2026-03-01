@@ -1,0 +1,590 @@
+{% extends "hod/base_hod.html" %}
+
+{% block title %}Student Performance - SPAS{% endblock %}
+
+{% block header_title %}Student Performance{% endblock %}
+{% block header_subtitle %}View all student performances with subjects{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-section {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .summary-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .summary-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(111,66,193,0.1);
+    }
+    
+    .summary-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #6f42c1;
+    }
+    
+    .summary-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+    
+    .badge-risk {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .badge-critical { background: #ffebee; color: #c62828; }
+    .badge-high { background: #fff3e0; color: #ef6c00; }
+    .badge-average { background: #e3f2fd; color: #1565c0; }
+    .badge-safe { background: #e8f5e9; color: #2e7d32; }
+    .badge-best { background: #f3e9ff; color: #6f42c1; }
+    .badge-secondary { background: #f5f5f5; color: #616161; }
+    
+    .bg-purple-soft { background: #f3e9ff; }
+    .text-purple { color: #6f42c1; }
+    
+    .year-tag {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 5px;
+    }
+    
+    /* Subject Modal Styles */
+    .subject-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .subject-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .subject-item:hover {
+        background: #f3e9ff;
+    }
+    
+    .subject-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .subject-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .subject-code {
+        font-size: 0.8rem;
+        color: #6f42c1;
+        background: #f3e9ff;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    
+    .marks-detail {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 5px;
+        font-size: 0.85rem;
+    }
+    
+    .marks-detail span {
+        background: #f8f9fa;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+    
+    .semester-tab {
+        cursor: pointer;
+        padding: 8px 15px;
+        border-radius: 20px;
+        background: #f8f9fa;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+        transition: all 0.3s;
+        border: 1px solid transparent;
+    }
+    
+    .semester-tab:hover {
+        background: #f3e9ff;
+        color: #6f42c1;
+        border-color: #6f42c1;
+    }
+    
+    .semester-tab.active {
+        background: #6f42c1;
+        color: white;
+    }
+    
+    .semester-content {
+        display: none;
+    }
+    
+    .semester-content.active {
+        display: block;
+    }
+    
+    .current-sem-badge {
+        background: #28a745;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        margin-left: 5px;
+    }
+    
+    /* Fix for modal blinking */
+    .modal.fade .modal-dialog {
+        transition: transform 0.3s ease-out;
+        transform: translate(0, -50px);
+    }
+    
+    .modal.show .modal-dialog {
+        transform: translate(0, 0);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Filter Section -->
+<div class="filter-section">
+    <form method="GET" action="{{ url_for('hod.student_performance') }}" class="row g-3">
+        <!-- Batch Year Dropdown -->
+        <div class="col-md-2">
+            <label class="form-label fw-bold">Batch Year</label>
+            <select name="batch" class="form-select">
+                <option value="all">All Batches</option>
+                {% for batch in available_batches %}
+                <option value="{{ batch }}" {% if current_filters.batch == batch|string %}selected{% endif %}>
+                    {{ batch_display[batch] if batch_display[batch] is defined else batch }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Semester Dropdown with Student Count -->
+        <div class="col-md-2">
+            <label class="form-label fw-bold">Semester</label>
+            <select name="semester" class="form-select">
+                <option value="all">All Semesters</option>
+                {% for sem in available_semesters %}
+                <option value="{{ sem }}" {% if current_filters.semester == sem|string %}selected{% endif %}>
+                    Semester {{ sem }}
+                    {% if semester_counts and semester_counts[sem] is defined and semester_counts[sem] > 0 %}
+                        ({{ semester_counts[sem] }} students)
+                    {% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Risk Level Dropdown -->
+        <div class="col-md-2">
+            <label class="form-label fw-bold">Risk Level</label>
+            <select name="risk" class="form-select">
+                <option value="all">All Risks</option>
+                <option value="Critical">Critical</option>
+                <option value="High Risk">High Risk</option>
+                <option value="Average">Average</option>
+                <option value="Safe">Safe</option>
+                <option value="Best">Best</option>
+                <option value="No Data">No Data</option>
+            </select>
+        </div>
+        
+        <!-- Search Box -->
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Search</label>
+            <input type="text" name="search" class="form-control" 
+                   value="{{ current_filters.search if current_filters.search else '' }}" 
+                   placeholder="Name or Reg No...">
+        </div>
+        
+        <!-- Apply Button -->
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-purple w-100">
+                <i class="fas fa-search me-2"></i>Apply
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Summary Stats -->
+<div class="summary-cards">
+    <div class="summary-card">
+        <div class="summary-number">{{ total_students if total_students else 0 }}</div>
+        <div class="summary-label">Total Students</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-number">{{ total_critical if total_critical else 0 }}</div>
+        <div class="summary-label">Critical Risk</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-number">{{ students_with_data if students_with_data else 0 }}</div>
+        <div class="summary-label">With Data</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-number">{{ (total_students - students_with_data) if total_students and students_with_data else 0 }}</div>
+        <div class="summary-label">No Data</div>
+    </div>
+</div>
+
+<!-- Students Table -->
+<div class="card">
+    <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-users me-2"></i>Student Performance</h5>
+        <span class="badge bg-light text-purple">{{ performance_data|length if performance_data else 0 }} Students</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover datatable">
+                <thead>
+                    <tr>
+                        <th>Reg No</th>
+                        <th>Student Name</th>
+                        <th>Year</th>
+                        <th>Current Sem</th>
+                        <th>Subjects</th>
+                        <th>Current Sem Avg</th>
+                        <th>Overall Avg</th>
+                        <th>Risk</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in performance_data %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-purple-soft text-purple">
+                                {{ item.student.registration_number if item.student.registration_number else 'N/A' }}
+                            </span>
+                        </td>
+                        <td>
+                            <i class="fas fa-user-graduate text-purple me-2"></i>
+                            {{ item.student.name if item.student.name else 'N/A' }}
+                        </td>
+                        <td>
+                            {{ item.year_display if item.year_display else 'N/A' }}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">Sem {{ item.student.current_semester if item.student.current_semester else 'N/A' }}</span>
+                        </td>
+                        <td>
+                            {% if item.current_sem_count and item.current_sem_count > 0 %}
+                                <button type="button" class="btn btn-sm btn-outline-purple" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#subjectModal{{ item.student.id }}">
+                                    <i class="fas fa-book me-1"></i>
+                                    {{ item.current_sem_count }} Subjects
+                                </button>
+                            {% else %}
+                                <span class="badge bg-secondary">No subjects</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.current_sem_count and item.current_sem_count > 0 %}
+                                <strong>{{ item.current_sem_avg_marks if item.current_sem_avg_marks else '0' }}/20</strong>
+                                <small class="text-muted d-block">{{ item.current_sem_avg_attendance if item.current_sem_avg_attendance else '0' }}% att</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ item.overall_avg_marks if item.overall_avg_marks else '0' }}/20</strong>
+                            <small class="text-muted d-block">{{ item.overall_avg_attendance if item.overall_avg_attendance else '0' }}% att</small>
+                        </td>
+                        <td>
+                            <span class="badge-risk 
+                                {% if item.risk_status == 'Critical' %}badge-critical
+                                {% elif item.risk_status == 'High Risk' %}badge-high
+                                {% elif item.risk_status == 'Average' %}badge-average
+                                {% elif item.risk_status == 'Safe' %}badge-safe
+                                {% elif item.risk_status == 'Best' %}badge-best
+                                {% else %}badge-secondary{% endif %}">
+                                {{ item.risk_status if item.risk_status else 'No Data' }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('hod.student_detail', student_id=item.student.id) }}" 
+                               class="btn btn-sm btn-outline-purple">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>No students found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Subject Modals (Moved outside table to prevent reinitialization issues) -->
+{% for item in performance_data %}
+    {% if item.current_sem_count and item.current_sem_count > 0 %}
+    <!-- Subject Modal for {{ item.student.name }} -->
+    <div class="modal fade" id="subjectModal{{ item.student.id }}" tabindex="-1" aria-labelledby="subjectModalLabel{{ item.student.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-purple text-white">
+                    <h5 class="modal-title" id="subjectModalLabel{{ item.student.id }}">
+                        <i class="fas fa-book me-2"></i>
+                        {{ item.student.name }} - All Semesters
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Semester Tabs -->
+                    <div class="mb-3">
+                        {% for sem in range(1, item.student.current_semester + 1) %}
+                            {% if item.semester_data and item.semester_data[sem] and item.semester_data[sem]|length > 0 %}
+                                <span class="semester-tab {% if sem == item.student.current_semester %}active{% endif %}" 
+                                      onclick="showSemester({{ item.student.id }}, {{ sem }})">
+                                    Sem {{ sem }}
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Semester Content -->
+                    {% for sem in range(1, item.student.current_semester + 1) %}
+                        {% if item.semester_data and item.semester_data[sem] and item.semester_data[sem]|length > 0 %}
+                            <div id="sem{{ item.student.id }}_{{ sem }}" 
+                                 class="semester-content {% if sem == item.student.current_semester %}active{% endif %}">
+                                <h6 class="text-purple mb-3">Semester {{ sem }} Subjects</h6>
+                                <div class="subject-list">
+                                    {% for subject in item.semester_data[sem] %}
+                                    <div class="subject-item">
+                                        <div class="subject-header">
+                                            <span class="subject-name">{{ subject.subject_name if subject.subject_name else 'N/A' }}</span>
+                                            <span class="subject-code">{{ subject.subject_code if subject.subject_code else 'N/A' }}</span>
+                                        </div>
+                                        <div class="marks-detail">
+                                            <span><strong>Internal 1:</strong> {{ subject.internal1 if subject.internal1 else 0 }}/70</span>
+                                            <span><strong>Internal 2:</strong> {{ subject.internal2 if subject.internal2 else 0 }}/70</span>
+                                            <span><strong>Seminar:</strong> {{ subject.seminar if subject.seminar else 0 }}/10</span>
+                                            <span><strong>Assessment:</strong> {{ subject.assessment if subject.assessment else 0 }}/10</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-2">
+                                            <span>
+                                                <strong>Final:</strong> 
+                                                <span class="text-purple">{{ subject.marks if subject.marks else 0 }}/20</span>
+                                            </span>
+                                            <span>
+                                                <strong>Attendance:</strong>
+                                                <span class="{% if subject.attendance and subject.attendance >= 75 %}text-success{% elif subject.attendance and subject.attendance >= 70 %}text-warning{% else %}text-danger{% endif %}">
+                                                    {{ subject.attendance if subject.attendance else 0 }}%
+                                                </span>
+                                            </span>
+                                            <span>
+                                                <span class="badge-risk 
+                                                    {% if subject.risk == 'Critical' %}badge-critical
+                                                    {% elif subject.risk == 'High Risk' %}badge-high
+                                                    {% elif subject.risk == 'Average' %}badge-average
+                                                    {% elif subject.risk == 'Safe' %}badge-safe
+                                                    {% elif subject.risk == 'Best' %}badge-best
+                                                    {% endif %}">
+                                                    {{ subject.risk if subject.risk else 'N/A' }}
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// =====================================================
+// SEMESTER TAB FUNCTIONALITY
+// =====================================================
+
+/**
+ * Show selected semester content and hide others
+ */
+function showSemester(studentId, semester) {
+    try {
+        // Hide all semester content for this student
+        document.querySelectorAll(`[id^="sem${studentId}_"]`).forEach(el => {
+            el.classList.remove('active');
+        });
+        
+        // Show selected semester
+        const targetElement = document.getElementById(`sem${studentId}_${semester}`);
+        if (targetElement) {
+            targetElement.classList.add('active');
+        } else {
+            console.warn(`Semester element sem${studentId}_${semester} not found`);
+        }
+        
+        // Update tab active state
+        document.querySelectorAll(`[onclick*="showSemester(${studentId}"]`).forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Add active class to clicked tab
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error in showSemester:', error);
+    }
+}
+
+// =====================================================
+// BOOTSTRAP MODAL INITIALIZATION
+// =====================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        // Initialize all modals
+        const modalElements = document.querySelectorAll('.modal');
+        modalElements.forEach(function(modalEl) {
+            try {
+                // Check if modal is already initialized
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (!modalInstance) {
+                    new bootstrap.Modal(modalEl);
+                }
+            } catch (modalError) {
+                console.warn('Error initializing modal:', modalError);
+            }
+        });
+        console.log(`✅ Initialized ${modalElements.length} modals`);
+    } catch (error) {
+        console.error('Error in modal initialization:', error);
+    }
+});
+
+// =====================================================
+// MODAL BACKDROP FIX
+// =====================================================
+
+// Fix for modal backdrop issues
+$(document).ready(function() {
+    // Clean up modal backdrop when modal is hidden
+    $(document).on('hidden.bs.modal', '.modal', function() {
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
+    });
+    
+    // Ensure only one backdrop exists
+    $(document).on('show.bs.modal', '.modal', function() {
+        $('.modal-backdrop').remove();
+    });
+    
+    // Handle modal close button click
+    $('.modal .btn-close, .modal [data-bs-dismiss="modal"]').on('click', function() {
+        const modal = $(this).closest('.modal');
+        setTimeout(function() {
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+        }, 300);
+    });
+});
+
+// =====================================================
+// TABLE EXPORT FUNCTIONALITY
+// =====================================================
+
+function exportTableToExcel() {
+    const table = document.querySelector('.table');
+    if (!table) return;
+    
+    const rows = [];
+    const headers = [];
+    
+    // Get headers
+    table.querySelectorAll('thead th').forEach(th => {
+        headers.push(th.innerText.trim());
+    });
+    rows.push(headers.join(','));
+    
+    // Get data rows
+    table.querySelectorAll('tbody tr').forEach(row => {
+        const rowData = [];
+        row.querySelectorAll('td').forEach(td => {
+            // Clean up the text (remove HTML, extra spaces)
+            let text = td.innerText.trim().replace(/,/g, ';');
+            rowData.push(`"${text}"`);
+        });
+        rows.push(rowData.join(','));
+    });
+    
+    // Download CSV
+    const csvContent = rows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'student_performance.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+function printTable() {
+    window.print();
+}
+
+// =====================================================
+// DEBUG INFORMATION
+// =====================================================
+
+// Log initialization status
+console.log('✅ Student performance page loaded');
+console.log(`📊 Total students: {{ total_students if total_students else 0 }}`);
+console.log(`📝 Students with data: {{ students_with_data if students_with_data else 0 }}`);
+console.log(`⚠️ Critical risk: {{ total_critical if total_critical else 0 }}`);
+</script>
+{% endblock %}

@@ -1,0 +1,249 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}Student Details - {{ student.name }}{% endblock %}
+
+{% block header_title %}Student Performance Details{% endblock %}
+{% block header_subtitle %}{{ student.name }} - {{ student.registration_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .student-photo {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        color: white;
+        font-size: 3rem;
+        font-weight: 600;
+    }
+    
+    .info-table {
+        width: 100%;
+    }
+    
+    .info-table td {
+        padding: 10px;
+        border-bottom: 1px dashed #e9ecef;
+    }
+    
+    .info-table td:first-child {
+        font-weight: 600;
+        color: #6f42c1;
+        width: 150px;
+    }
+    
+    .suggestion-card {
+        background: #f3e9ff;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-left: 4px solid #6f42c1;
+        transition: all 0.3s;
+    }
+    
+    .suggestion-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.1);
+    }
+    
+    .suggestion-card h6 {
+        color: #6f42c1;
+        margin-bottom: 5px;
+    }
+    
+    .suggestion-card p {
+        color: #2c3e50;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    .performance-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .performance-table thead th {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 12px;
+        font-weight: 600;
+    }
+    
+    .performance-table tbody td {
+        padding: 10px;
+        border-bottom: 1px solid #e9ecef;
+        text-align: center;
+    }
+    
+    .risk-badge {
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .risk-critical { background: #dc3545; color: white; }
+    .risk-average { background: #ffc107; color: #2c3e50; }
+    .risk-safe { background: #28a745; color: white; }
+    .risk-best { background: #6f42c1; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <!-- Student Info Card -->
+        <div class="info-card">
+            <div class="student-photo">
+                {{ student.name[0] }}
+            </div>
+            <h4 class="text-center mb-3">{{ student.name }}</h4>
+            <table class="info-table">
+                <tr>
+                    <td>Student ID</td>
+                    <td>{{ student.student_id }}</td>
+                </tr>
+                <tr>
+                    <td>Registration No</td>
+                    <td>{{ student.registration_number }}</td>
+                </tr>
+                <tr>
+                    <td>Course</td>
+                    <td>{{ student.course.name }}</td>
+                </tr>
+                <tr>
+                    <td>Department</td>
+                    <td>{{ student.department.name }}</td>
+                </tr>
+                <tr>
+                    <td>Current Semester</td>
+                    <td>{{ student.current_semester }}</td>
+                </tr>
+                <tr>
+                    <td>Batch Year</td>
+                    <td>{{ student.batch_year }}</td>
+                </tr>
+                <tr>
+                    <td>Email</td>
+                    <td>{{ student.email }}</td>
+                </tr>
+                <tr>
+                    <td>Phone</td>
+                    <td>{{ student.phone or 'Not provided' }}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- Improvement Suggestions -->
+        <div class="info-card">
+            <h5 class="text-purple mb-3"><i class="fas fa-lightbulb me-2"></i>Improvement Suggestions</h5>
+            {% for item in suggestions %}
+            <div class="suggestion-card">
+                <h6>{{ item.subject }}</h6>
+                <p class="mb-1">Current Marks: {{ item.marks }}/20</p>
+                <p class="mb-0">{{ item.suggestion }}</p>
+            </div>
+            {% else %}
+            <p class="text-muted text-center">No suggestions available</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- Performance Records -->
+        <div class="info-card">
+            <h5 class="text-purple mb-3"><i class="fas fa-chart-line me-2"></i>Performance Records</h5>
+            <div class="table-responsive">
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Internal 1</th>
+                            <th>Internal 2</th>
+                            <th>Seminar</th>
+                            <th>Assessment</th>
+                            <th>Total/20</th>
+                            <th>Attendance</th>
+                            <th>Grade</th>
+                            <th>Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for perf in performances %}
+                        <tr>
+                            <td>{{ perf.subject.name }}</td>
+                            <td>{{ perf.internal1 }}</td>
+                            <td>{{ perf.internal2 }}</td>
+                            <td>{{ perf.seminar }}</td>
+                            <td>{{ perf.assessment }}</td>
+                            <td><strong>{{ perf.final_marks }}</strong></td>
+                            <td>{{ perf.attendance_percentage }}%</td>
+                            <td><span class="badge bg-purple">{{ perf.grade }}</span></td>
+                            <td>
+                                <span class="risk-badge 
+                                    {% if perf.risk_status == 'Critical' %}risk-critical
+                                    {% elif perf.risk_status == 'Average' %}risk-average
+                                    {% elif perf.risk_status == 'Best' %}risk-best
+                                    {% else %}risk-safe{% endif %}">
+                                    {{ perf.risk_status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted">No performance records found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Performance Summary -->
+        <div class="info-card">
+            <h5 class="text-purple mb-3"><i class="fas fa-chart-pie me-2"></i>Performance Summary</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h3 class="text-purple">{{ performances|length }}</h3>
+                        <p class="text-muted">Subjects</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        {% set avg = performances|sum(attribute='final_marks') / performances|length if performances else 0 %}
+                        <h3 class="text-purple">{{ avg|round(1) }}</h3>
+                        <p class="text-muted">Average</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        {% set critical = performances|selectattr('risk_status', 'equalto', 'Critical')|list|length %}
+                        <h3 class="{% if critical > 0 %}text-danger{% else %}text-success{% endif %}">{{ critical }}</h3>
+                        <p class="text-muted">Critical</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        {% set best = performances|selectattr('grade', 'equalto', 'A+')|list|length %}
+                        <h3 class="text-purple">{{ best }}</h3>
+                        <p class="text-muted">A+ Grades</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

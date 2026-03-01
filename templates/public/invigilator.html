@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Invigilator Duties - Public View{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-user-shield text-purple me-2"></i>Invigilator Duties</h2>
+            <p class="text-muted">View invigilator assignments for examinations</p>
+            <hr>
+        </div>
+    </div>
+
+    {% if grouped %}
+        {% for date_key, group in grouped.items()|sort %}
+        <div class="card mb-4">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    {{ group.date.strftime('%A, %d %B %Y') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Room</th>
+                                <th>Block</th>
+                                <th>Invigilator</th>
+                                <th>Department</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inv in group.assignments %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if inv.exam_time == '10AM' %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ inv.exam_time }}
+                                    </span>
+                                </td>
+                                <td><strong>{{ inv.room_number }}</strong></td>
+                                <td>Block {{ inv.block }}</td>
+                                <td>{{ inv.teacher_name }}</td>
+                                <td>{{ inv.teacher_department }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <i class="fas fa-user-slash fa-4x mb-3"></i>
+        <h4>No Invigilator Assignments</h4>
+        <p>No invigilator duties have been published yet.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-purple mt-3">
+            <i class="fas fa-home me-2"></i>Back to Home
+        </a>
+    </div>
+    {% endif %}
+    
+    <div class="text-center mt-3">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left me-2"></i>Back to Home
+        </a>
+    </div>
+</div>
+{% endblock %}

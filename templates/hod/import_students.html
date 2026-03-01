@@ -1,0 +1,77 @@
+{% extends "hod/base_hod.html" %}
+
+{% block title %}Import Students - SPAS{% endblock %}
+
+{% block header_title %}Import Student Data{% endblock %}
+{% block header_subtitle %}Bulk import students from text data{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-import me-2"></i>Paste Student Data
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('hod.import_students') }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Student Data (Tab-separated):</label>
+                        <textarea name="student_data" class="form-control" rows="15" 
+                                  placeholder="Paste your tab-separated data here...">{{ request.form.get('student_data', '') }}</textarea>
+                        <div class="form-text text-muted mt-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Expected format: Registration No, Name, Course, Semester, Attendance, Marks, Risk Level
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="fas fa-eye me-2"></i>Preview of your data:</h6>
+                                <pre class="mb-0" style="font-size: 0.85rem;">CS2023086	Vedant Patel	B.Sc Computer Science	Semester 6	5	6.0/20	Critical
+CS2023087	Pranav Patel	B.Sc Computer Science	Semester 6	5	0.0/20	Critical
+CS2023088	Karthik Patel	B.Sc Computer Science	Semester 6	5	5.0/20	Critical
+CS2023089	Nikhil Patel	B.Sc Computer Science	Semester 6	5	6.0/20	Critical
+CS2023090	Rahul Patel	B.Sc Computer Science	Semester 6	5	4.0/20	Critical
+CS2024031	Sanjay Sharma	B.Sc Computer Science	Semester 3	5	0.0/20	Critical
+CS2024032	Rajesh Sharma	B.Sc Computer Science	Semester 3	5	4.0/20	Critical
+CS2024033	Aarav Verma	B.Sc Computer Science	Semester 3	5	9.0/20	Critical</pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('hod.student_performance') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Performance
+                        </a>
+                        <button type="submit" class="btn btn-purple">
+                            <i class="fas fa-upload me-2"></i>Import Students
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i>Instructions</h6>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li>Copy your data from Excel/Notepad (tab-separated format)</li>
+                    <li>Paste it in the text area above</li>
+                    <li>Make sure each column is separated by a tab (not spaces)</li>
+                    <li>Click "Import Students" to add them to the system</li>
+                    <li>The system will automatically create missing courses and subjects</li>
+                </ol>
+                <div class="alert alert-warning mt-3 mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Note:</strong> Semester 7 students with "No Data" will be imported but won't appear in risk reports until performance data is added.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

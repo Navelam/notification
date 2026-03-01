@@ -1,0 +1,240 @@
+{% extends "hod/base_hod.html" %}
+
+{% block title %}Teacher Details - SPAS{% endblock %}
+
+{% block header_title %}Teacher Details{% endblock %}
+{% block header_subtitle %}View all teachers in your department{% endblock %}
+
+{% block extra_css %}
+<style>
+    .expertise-tag {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        display: inline-block;
+        margin: 2px;
+    }
+    
+    .workload-bar {
+        width: 100%;
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+    
+    .workload-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #6f42c1, #9b59b6);
+        border-radius: 3px;
+        transition: width 0.3s;
+    }
+    
+    /* Subject Modal Styles */
+    .subject-list {
+        max-height: 350px;
+        overflow-y: auto;
+    }
+    
+    .subject-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .subject-item:hover {
+        background: #f3e9ff;
+        transform: translateX(5px);
+    }
+    
+    .subject-item i {
+        color: #6f42c1;
+        margin-right: 10px;
+        font-size: 1rem;
+    }
+    
+    .btn-view-subjects {
+        background: transparent;
+        border: 1px solid #6f42c1;
+        color: #6f42c1;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        margin-left: 8px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .btn-view-subjects:hover {
+        background: #6f42c1;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 3px 8px rgba(111, 66, 193, 0.3);
+    }
+    
+    .badge-subject-count {
+        background: #6f42c1;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    /* Modal Header */
+    .modal-header.bg-purple {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        border-bottom: none;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+    
+    .modal-header .btn-close:hover {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="table-responsive">
+    <table class="table datatable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Assigned Subjects</th>
+                <th>Expertise Areas</th>
+                <th>Workload</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in teacher_data %}
+            <tr>
+                <td>
+                    <i class="fas fa-user-circle text-purple me-2"></i>
+                    {{ item.teacher.full_name }}
+                </td>
+                <td>@{{ item.teacher.username }}</td>
+                <td>{{ item.teacher.email }}</td>
+                
+                <td>
+                    <span class="badge-subject-count">{{ item.subject_count }}</span>
+                    
+                    {% if item.subject_names and item.subject_names|length > 0 %}
+                        <button type="button" class="btn-view-subjects" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#subjectModal{{ item.teacher.id }}">
+                            <i class="fas fa-eye me-1"></i> View List
+                        </button>
+                        
+                        <!-- Modal for subject list - using teacher.id for unique ID -->
+<div class="modal fade" id="subjectModal{{ item.teacher.id }}" tabindex="-1" 
+     aria-labelledby="subjectModalLabel{{ item.teacher.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-purple text-white">
+                <h5 class="modal-title" id="subjectModalLabel{{ item.teacher.id }}">
+                    <i class="fas fa-book me-2"></i>
+                    {{ item.teacher.full_name }} - Assigned Subjects
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="subject-list">
+                    {% for subject in item.subject_names %}
+                        <div class="subject-item d-flex align-items-center">
+                            <i class="fas fa-check-circle"></i>
+                            <span>{{ subject }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+                    {% else %}
+                        <span class="text-muted ms-2">No subjects</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="expertise-tag">Teaching</span>
+                </td>
+                <td style="min-width: 120px;">
+                    {% set workload_percent = (item.subject_count/5*100) %}
+                    {% set display_percent = workload_percent if workload_percent <= 100 else 100 %}
+                    <div class="workload-bar" title="Workload: {{ item.subject_count }}/5 subjects">
+                        <div class="workload-fill" style="width: {{ display_percent }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ item.subject_count }}/5 subjects</small>
+                </td>
+                <td>
+                    {% if item.teacher.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <!-- templates/hod/teacher_details.html -->
+
+    <a href="{{ url_for('hod.teacher_profile', teacher_id=item.teacher.id) }}"
+       class="btn btn-sm btn-outline-purple">
+        <i class="fas fa-eye me-1"></i>View Profile
+    </a>
+</td>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="text-center text-muted py-4">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <p>No teachers found in your department</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- AI Assignment Summary -->
+<div class="card mt-4">
+    <div class="card-header bg-purple text-white">
+        <h5 class="mb-0"><i class="fas fa-robot me-2"></i>AI Assignment Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 text-center">
+                <h3 class="text-purple">{{ teacher_data|length }}</h3>
+                <p class="text-muted">Total Teachers</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <h3 class="text-purple">{{ teacher_data|sum(attribute='subject_count') }}</h3>
+                <p class="text-muted">Total Assignments</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <h3 class="text-purple">
+                    {% set total = teacher_data|sum(attribute='subject_count') %}
+                    {% if teacher_data %}
+                        {{ (total / teacher_data|length)|round(1) }}
+                    {% else %}
+                        0
+                    {% endif %}
+                </h3>
+                <p class="text-muted">Average per Teacher</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

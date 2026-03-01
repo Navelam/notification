@@ -1,0 +1,215 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}Upload Question Paper - {{ subject.name }}{% endblock %}
+
+{% block header_title %}Upload Question Paper{% endblock %}
+{% block header_subtitle %}{{ subject.name }} ({{ subject.code }}) - Semester {{ subject.semester_id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+    
+    .form-title {
+        color: #6f42c1;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f3e9ff;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .form-label i {
+        color: #6f42c1;
+        width: 20px;
+        margin-right: 5px;
+    }
+    
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #6f42c1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(111,66,193,0.1);
+    }
+    
+    .file-upload {
+        border: 2px dashed #6f42c1;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        background: #f3e9ff;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .file-upload:hover {
+        background: #e8d9ff;
+    }
+    
+    .file-upload i {
+        font-size: 3rem;
+        color: #6f42c1;
+        margin-bottom: 15px;
+    }
+    
+    .file-upload p {
+        margin: 0;
+        color: #6c757d;
+    }
+    
+    .file-upload .file-name {
+        font-weight: 600;
+        color: #6f42c1;
+        margin-top: 10px;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(111,66,193,0.3);
+    }
+    
+    .info-box {
+        background: #f3e9ff;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 25px;
+        border-left: 4px solid #6f42c1;
+    }
+    
+    .info-box i {
+        color: #6f42c1;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="form-card">
+        <h4 class="form-title"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Question Paper</h4>
+        
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <strong>Allowed file types:</strong> PDF, DOC, DOCX, TXT (Max size: 10MB)
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-heading"></i> Paper Title *</label>
+                <input type="text" name="title" class="form-control" required 
+                       placeholder="e.g., Internal Assessment I - 2025">
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-tag"></i> Exam Type *</label>
+                        <select name="exam_type" class="form-select" required>
+                            <option value="">Select Type</option>
+                            {% for type in exam_types %}
+                            <option value="{{ type.value }}">{{ type.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-calendar"></i> Academic Year</label>
+                        <select name="academic_year" class="form-select">
+                            <option value="">Select Year</option>
+                            {% for year in academic_years %}
+                            <option value="{{ year }}">{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-align-left"></i> Description</label>
+                <textarea name="description" class="form-control" rows="3" 
+                          placeholder="Brief description about this question paper..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-file"></i> Question Paper File *</label>
+                <div class="file-upload" id="fileUpload" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to select file or drag and drop</p>
+                    <p class="text-muted small">PDF, DOC, DOCX, TXT (Max 10MB)</p>
+                    <div id="fileName" class="file-name"></div>
+                </div>
+                <input type="file" name="question_paper" id="fileInput" style="display: none;" 
+                       accept=".pdf,.doc,.docx,.txt" required onchange="updateFileName(this)">
+            </div>
+            
+            <button type="submit" class="btn-submit" onclick="return confirm('Upload this question paper?')">
+                <i class="fas fa-cloud-upload-alt me-2"></i>Upload Question Paper
+            </button>
+        </form>
+        
+        <div class="text-center mt-3">
+            <a href="{{ url_for('teacher.question_papers') }}" class="text-purple text-decoration-none">
+                <i class="fas fa-arrow-left me-1"></i> Back to Question Papers
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateFileName(input) {
+    if (input.files && input.files[0]) {
+        let fileName = input.files[0].name;
+        let fileSize = (input.files[0].size / 1024 / 1024).toFixed(2);
+        document.getElementById('fileName').innerHTML = `<i class="fas fa-check-circle text-success me-1"></i> ${fileName} (${fileSize} MB)`;
+        
+        // Validate file size (10MB max)
+        if (input.files[0].size > 10 * 1024 * 1024) {
+            alert('File size exceeds 10MB limit. Please select a smaller file.');
+            input.value = '';
+            document.getElementById('fileName').innerHTML = '';
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,778 @@
+{% extends "coordinator/base_coordinator.html" %}
+
+{% block title %}Notifications Dashboard - Coordinator{% endblock %}
+
+{% block header_title %}Notifications Dashboard{% endblock %}
+{% block header_subtitle %}Manage all notifications{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* =====================================================
+       COMPACT NOTIFICATIONS DASHBOARD - OPTIMIZED FOR FIRST SCREEN
+       ===================================================== */
+    
+    /* Stats Cards - 4 per row, compact */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 15px 12px;
+        border: 1px solid #e9ecef;
+        position: relative;
+        transition: all 0.2s;
+    }
+    
+    .stat-card:hover {
+        border-color: #6f42c1;
+        box-shadow: 0 3px 10px rgba(111,66,193,0.08);
+    }
+    
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #6f42c1;
+        line-height: 1.1;
+        margin-bottom: 2px;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .stat-icon-small {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: 1.5rem;
+        opacity: 0.15;
+        color: #6f42c1;
+    }
+    
+    /* Action Bar - Compact */
+    .action-bar {
+        background: white;
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-bottom: 15px;
+        border: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .btn-create {
+        background: #6f42c1;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-create:hover {
+        background: #5a32a3;
+        color: white;
+    }
+    
+    .btn-export {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: 8px;
+    }
+    
+    .btn-export:hover {
+        background: #218838;
+    }
+    
+    .filter-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-select {
+        padding: 6px 10px;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        min-width: 130px;
+        background: white;
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-box input {
+        padding: 6px 10px 6px 30px;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        width: 200px;
+        font-size: 0.8rem;
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #adb5bd;
+        font-size: 0.8rem;
+    }
+    
+    /* Table Container - Compact */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        overflow: hidden;
+    }
+    
+    .notification-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+    }
+    
+    .notification-table th {
+        background: #f8f9fa;
+        color: #495057;
+        padding: 10px 8px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border-bottom: 2px solid #6f42c1;
+    }
+    
+    .notification-table td {
+        padding: 8px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+    
+    .notification-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    
+    /* Compact Badges */
+    .type-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+    }
+    
+    .type-badge i {
+        font-size: 0.65rem;
+    }
+    
+    .type-fee { background: #f8d7da; color: #721c24; }
+    .type-meeting { background: #fff3cd; color: #856404; }
+    .type-event { background: #f3e9ff; color: #6f42c1; }
+    .type-result { background: #d4edda; color: #155724; }
+    .type-timetable { background: #d1ecf1; color: #0c5460; }
+    .type-holiday { background: #d1e7dd; color: #0a3622; }
+    .type-emergency { background: #f8d7da; color: #721c24; }
+    .type-general { background: #e2e3e5; color: #383d41; }
+    
+    .target-badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    .target-all { background: #f3e9ff; color: #6f42c1; }
+    .target-students { background: #d4edda; color: #155724; }
+    .target-teachers { background: #fff3cd; color: #856404; }
+    .target-public { background: #d1ecf1; color: #0c5460; }
+    
+    .status-badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    .status-active { background: #d4edda; color: #155724; }
+    .status-inactive { background: #e2e3e5; color: #383d41; }
+    .status-expired { background: #f8d7da; color: #721c24; }
+    .status-upcoming { background: #fff3cd; color: #856404; }
+    
+    /* Action Buttons - Compact */
+    .action-buttons {
+        display: flex;
+        gap: 4px;
+    }
+    
+    .btn-action {
+        width: 26px;
+        height: 26px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        color: white;
+        font-size: 0.7rem;
+        text-decoration: none;
+    }
+    
+    .btn-edit { background: #17a2b8; }
+    .btn-toggle { background: #ffc107; color: #212529; }
+    .btn-delete { background: #dc3545; }
+    
+    .btn-edit:hover { background: #138496; }
+    .btn-toggle:hover { background: #e0a800; }
+    .btn-delete:hover { background: #c82333; }
+    
+    /* Message Preview */
+    .message-preview {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #6c757d;
+        font-size: 0.75rem;
+    }
+    
+    /* Date Badge */
+    .date-badge {
+        background: #f8f9fa;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        color: #495057;
+        white-space: nowrap;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 12px;
+    }
+    
+    .empty-state h4 {
+        font-size: 1.1rem;
+        color: #495057;
+        margin-bottom: 6px;
+    }
+    
+    .empty-state p {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+    
+    /* Pagination - Compact */
+    .pagination-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+    
+    /* Modal */
+    .modal-content {
+        border-radius: 8px;
+        border: none;
+    }
+    
+    .modal-header {
+        background: #dc3545;
+        color: white;
+        padding: 12px 16px;
+        border: none;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        font-size: 0.8rem;
+    }
+    
+    .modal-body {
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .modal-body i {
+        font-size: 3rem;
+        color: #dc3545;
+        margin-bottom: 12px;
+    }
+    
+    .modal-body h5 {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+    }
+    
+    .modal-body p {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .modal-footer {
+        padding: 12px 16px;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    
+    .btn-confirm-delete {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    
+    /* Toast */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+    
+    .toast {
+        background: white;
+        border-radius: 6px;
+        padding: 10px 16px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        border-left: 3px solid;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 250px;
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+    }
+    
+    .toast.success { border-left-color: #28a745; }
+    .toast.error { border-left-color: #dc3545; }
+    .toast.warning { border-left-color: #ffc107; }
+    .toast.info { border-left-color: #17a2b8; }
+    
+    .toast i { font-size: 1rem; }
+    .toast.success i { color: #28a745; }
+    .toast.error i { color: #dc3545; }
+    .toast.warning i { color: #ffc107; }
+    .toast.info i { color: #17a2b8; }
+    
+    .toast-close {
+        margin-left: auto;
+        cursor: pointer;
+        color: #adb5bd;
+        font-size: 0.8rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .action-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-group {
+            justify-content: space-between;
+        }
+        
+        .search-box input {
+            width: 100%;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .notification-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards - 4 per row, compact -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total }}</div>
+        <div class="stat-label">Total Notifications</div>
+        <div class="stat-icon-small">
+            <i class="fas fa-bell"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">{{ active }}</div>
+        <div class="stat-label">Active</div>
+        <div class="stat-icon-small">
+            <i class="fas fa-check-circle"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">{{ inactive }}</div>
+        <div class="stat-label">Inactive</div>
+        <div class="stat-icon-small">
+            <i class="fas fa-ban"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">{{ expired }}</div>
+        <div class="stat-label">Expired</div>
+        <div class="stat-icon-small">
+            <i class="fas fa-clock"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Action Bar - Compact -->
+<div class="action-bar">
+    <div class="d-flex align-items-center">
+        <a href="{{ url_for('coordinator.create_notification') }}" class="btn-create">
+            <i class="fas fa-plus-circle"></i> New Notification
+        </a>
+        <button class="btn-export" onclick="exportToCSV()">
+            <i class="fas fa-download"></i> Export
+        </button>
+    </div>
+    
+    <div class="filter-group">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search...">
+        </div>
+        
+        <select class="filter-select" id="typeFilter">
+            <option value="all">All Types</option>
+            <option value="fee">Fee</option>
+            <option value="meeting">Meeting</option>
+            <option value="event">Event</option>
+            <option value="result">Result</option>
+            <option value="timetable">Timetable</option>
+            <option value="general">General</option>
+        </select>
+        
+        <select class="filter-select" id="statusFilter">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="expired">Expired</option>
+        </select>
+    </div>
+</div>
+
+<!-- Notifications Table - Compact -->
+<div class="table-container">
+    <table class="notification-table" id="notificationTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Message</th>
+                <th>Target</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for notif in notifications %}
+            <tr onclick="window.location.href='{{ url_for('coordinator.edit_notification', notification_id=notif.id) }}'" style="cursor: pointer;">
+                <td><span class="date-badge">#{{ notif.id }}</span></td>
+                
+                <td>
+                    <span class="type-badge type-{{ notif.notification_type }}">
+                        <i class="{{ notif.get_icon() }}"></i>
+                        {{ notif.notification_type|title }}
+                    </span>
+                </td>
+                
+                <td>
+                    <strong style="font-size:0.8rem;">{{ notif.title[:20] }}{% if notif.title|length > 20 %}...{% endif %}</strong>
+                </td>
+                
+                <td>
+                    <div class="message-preview" title="{{ notif.message }}">
+                        {{ notif.message[:30] }}{% if notif.message|length > 30 %}...{% endif %}
+                    </div>
+                </td>
+                
+                <td>
+                    <span class="target-badge target-{{ notif.target_role }}">
+                        {{ notif.target_role|title }}
+                    </span>
+                </td>
+                
+                <td><span class="date-badge">{{ notif.start_date.strftime('%d-%m-%y') if notif.start_date else '-' }}</span></td>
+                <td><span class="date-badge">{{ notif.end_date.strftime('%d-%m-%y') if notif.end_date else '-' }}</span></td>
+                
+                <td>
+                    {% if notif.is_active %}
+                        {% if notif.start_date <= now.date() <= notif.end_date %}
+                            <span class="status-badge status-active">Active</span>
+                        {% elif notif.start_date > now.date() %}
+                            <span class="status-badge status-upcoming">Upcoming</span>
+                        {% else %}
+                            <span class="status-badge status-expired">Expired</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="status-badge status-inactive">Inactive</span>
+                    {% endif %}
+                </td>
+                
+                <td onclick="event.stopPropagation()">
+                    <div class="action-buttons">
+                        <a href="{{ url_for('coordinator.edit_notification', notification_id=notif.id) }}" 
+                           class="btn-action btn-edit" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        
+                        <form method="POST" action="{{ url_for('coordinator.toggle_notification', notification_id=notif.id) }}" 
+                              style="display: inline;" id="toggle-form-{{ notif.id }}">
+                            <button type="submit" class="btn-action btn-toggle" 
+                                    title="{% if notif.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                <i class="fas {% if notif.is_active %}fa-eye-slash{% else %}fa-eye{% endif %}"></i>
+                            </button>
+                        </form>
+                        
+                        <button type="button" class="btn-action btn-delete" 
+                                onclick="showDeleteModal({{ notif.id }}, '{{ notif.title|escape }}')"
+                                title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="empty-state">
+                    <i class="fas fa-bell-slash"></i>
+                    <h4>No Notifications Found</h4>
+                    <p>Get started by creating your first notification</p>
+                    <a href="{{ url_for('coordinator.create_notification') }}" class="btn-create">
+                        <i class="fas fa-plus-circle"></i> Create Notification
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination Info - Compact -->
+<div class="pagination-info">
+    <span>Showing {{ notifications|length }} notifications</span>
+    <span class="text-muted">
+        <i class="fas fa-info-circle"></i> Click any row to edit
+    </span>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <i class="fas fa-trash-alt"></i>
+                <h5>Are you sure?</h5>
+                <p id="deleteMessage">This action cannot be undone.</p>
+                <div class="text-danger small fw-bold" id="deleteTitle"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="" id="deleteForm">
+                    <button type="submit" class="btn-confirm-delete">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// Filter Function
+document.getElementById('searchInput').addEventListener('keyup', filterTable);
+document.getElementById('typeFilter').addEventListener('change', filterTable);
+document.getElementById('statusFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const type = document.getElementById('typeFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('#notificationTable tbody tr');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        if (row.querySelector('.empty-state')) return;
+        
+        const typeCell = row.cells[1]?.querySelector('.type-badge')?.textContent.toLowerCase() || '';
+        const statusCell = row.cells[7]?.querySelector('.status-badge')?.textContent.toLowerCase() || '';
+        const title = row.cells[2]?.textContent.toLowerCase() || '';
+        const message = row.cells[3]?.textContent.toLowerCase() || '';
+        
+        const matchesSearch = search === '' || title.includes(search) || message.includes(search);
+        const matchesType = type === 'all' || typeCell.includes(type);
+        const matchesStatus = status === 'all' || statusCell.includes(status);
+        
+        if (matchesSearch && matchesType && matchesStatus) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    showToast(`Found ${visibleCount} notifications`, 'info');
+}
+
+// Delete Modal
+function showDeleteModal(id, title) {
+    document.getElementById('deleteMessage').innerHTML = 'Delete this notification?';
+    document.getElementById('deleteTitle').innerHTML = `<strong>"${title}"</strong>`;
+    document.getElementById('deleteForm').action = `/coordinator/delete-notification/${id}`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+// Toast
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icon = type === 'success' ? 'fa-check-circle' : 
+                 type === 'error' ? 'fa-exclamation-circle' : 
+                 type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+    
+    toast.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <span>${message}</span>
+        <i class="fas fa-times toast-close" onclick="this.parentElement.remove()"></i>
+    `;
+    
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// Export CSV
+function exportToCSV() {
+    const rows = document.querySelectorAll('#notificationTable tbody tr');
+    let csv = ['ID,Type,Title,Message,Target,Start,End,Status'];
+    
+    rows.forEach(row => {
+        if (row.style.display !== 'none' && !row.querySelector('.empty-state')) {
+            const cells = row.querySelectorAll('td');
+            const rowData = [
+                cells[0]?.textContent.trim().replace('#', ''),
+                cells[1]?.querySelector('.type-badge')?.textContent.trim() || '',
+                cells[2]?.textContent.trim().replace(/,/g, ';'),
+                cells[3]?.textContent.trim().replace(/,/g, ';'),
+                cells[4]?.querySelector('.target-badge')?.textContent.trim() || '',
+                cells[5]?.textContent.trim(),
+                cells[6]?.textContent.trim(),
+                cells[7]?.querySelector('.status-badge')?.textContent.trim() || ''
+            ];
+            csv.push(rowData.join(','));
+        }
+    });
+    
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `notifications_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast(`Exported ${csv.length - 1} notifications`);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        document.getElementById('searchInput').focus();
+    }
+    if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        window.location.href = document.querySelector('.btn-create').href;
+    }
+});
+
+// Confirm toggle
+document.querySelectorAll('.btn-toggle').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        if (!confirm('Toggle notification status?')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends "coordinator/base_coordinator.html" %}
+
+{% block title %}Edit Notification - Coordinator{% endblock %}
+
+{% block header_title %}Edit Notification{% endblock %}
+{% block header_subtitle %}Update notification details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .form-header {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f3e9ff;
+    }
+    
+    .form-header h4 {
+        color: #6f42c1;
+        font-weight: 600;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-label i {
+        color: #6f42c1;
+        width: 20px;
+        margin-right: 5px;
+    }
+    
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #6f42c1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+    }
+    
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -10px;
+    }
+    
+    .col-md-6 {
+        width: 50%;
+        padding: 0 10px;
+        box-sizing: border-box;
+    }
+    
+    .btn-update {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        width: 100%;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .btn-update:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(111, 66, 193, 0.4);
+    }
+    
+    .btn-update i {
+        margin-right: 8px;
+    }
+    
+    @media (max-width: 768px) {
+        .col-md-6 {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h4><i class="fas fa-edit"></i> Edit Notification #{{ notification.id }}</h4>
+            <p class="text-muted mb-0">Update the notification details below</p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('coordinator.edit_notification', notification_id=notification.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-tag"></i> Notification Type *</label>
+                        <select name="notification_type" class="form-select" required>
+                            <option value="fee" {% if notification.notification_type == 'fee' %}selected{% endif %}>💰 Fee Reminder</option>
+                            <option value="meeting" {% if notification.notification_type == 'meeting' %}selected{% endif %}>👥 Parents Meeting</option>
+                            <option value="event" {% if notification.notification_type == 'event' %}selected{% endif %}>🎉 College Event</option>
+                            <option value="result" {% if notification.notification_type == 'result' %}selected{% endif %}>📊 Exam Results</option>
+                            <option value="timetable" {% if notification.notification_type == 'timetable' %}selected{% endif %}>📅 Exam Timetable</option>
+                            <option value="holiday" {% if notification.notification_type == 'holiday' %}selected{% endif %}>🏖️ Holiday</option>
+                            <option value="emergency" {% if notification.notification_type == 'emergency' %}selected{% endif %}>🚨 Emergency</option>
+                            <option value="general" {% if notification.notification_type == 'general' %}selected{% endif %}>📢 General Announcement</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-users"></i> Target Audience *</label>
+                        <select name="target_role" class="form-select" required>
+                            <option value="all" {% if notification.target_role == 'all' %}selected{% endif %}>👥 Everyone (All Users)</option>
+                            <option value="students" {% if notification.target_role == 'students' %}selected{% endif %}>🎓 All Students</option>
+                            <option value="teachers" {% if notification.target_role == 'teachers' %}selected{% endif %}>👨‍🏫 All Teachers</option>
+                            <option value="public" {% if notification.target_role == 'public' %}selected{% endif %}>🌍 Public Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-heading"></i> Title *</label>
+                <input type="text" name="title" class="form-control" value="{{ notification.title }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-align-left"></i> Message *</label>
+                <textarea name="message" class="form-control" rows="4" required>{{ notification.message }}</textarea>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-calendar-alt"></i> Start Date *</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ notification.start_date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-calendar-check"></i> End Date *</label>
+                        <input type="date" name="end_date" class="form-control" value="{{ notification.end_date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Status:</strong> 
+                {% if notification.is_active %}
+                    <span class="badge bg-success">Active</span>
+                {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                {% endif %}
+                | Created: {{ notification.created_at.strftime('%d %b %Y, %H:%M') }}
+            </div>
+            
+            <div class="d-flex gap-3 mt-4">
+                <a href="{{ url_for('coordinator.notifications_dashboard') }}" class="btn btn-secondary flex-fill">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+                <button type="submit" class="btn-update flex-fill">
+                    <i class="fas fa-save me-2"></i>Update Notification
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

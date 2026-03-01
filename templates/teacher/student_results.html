@@ -1,0 +1,1051 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}Student Results - {{ subject.name }}{% endblock %}
+
+{% block header_title %}Student Results{% endblock %}
+{% block header_subtitle %}{{ subject.name }} ({{ subject.code }}) - Semester {{ subject.semester }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Teacher Info Card */
+    .teacher-info-card {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        box-shadow: 0 10px 25px rgba(111, 66, 193, 0.3);
+    }
+    
+    .teacher-avatar-large {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 600;
+        border: 3px solid white;
+    }
+    
+    .teacher-details h2 {
+        margin: 0 0 5px 0;
+        font-size: 1.8rem;
+    }
+    
+    .teacher-details p {
+        margin: 0;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .teacher-details i {
+        margin-right: 5px;
+    }
+    
+    /* Filter Section */
+    .filter-section {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-label {
+        font-weight: 600;
+        color: #6f42c1;
+    }
+    
+    .filter-select {
+        padding: 8px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        color: #2c3e50;
+        background: white;
+        min-width: 150px;
+    }
+    
+    .filter-select:focus {
+        border-color: #6f42c1;
+        outline: none;
+    }
+    
+    /* Stats Cards */
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #6f42c1, #9b59b6);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(111, 66, 193, 0.1);
+    }
+    
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #6f42c1;
+        line-height: 1.2;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-trend {
+        font-size: 0.8rem;
+        margin-top: 5px;
+        color: #28a745;
+    }
+    
+    /* Export Buttons */
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+    
+    .export-btn {
+        background: white;
+        border: 2px solid #6f42c1;
+        color: #6f42c1;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .export-btn:hover {
+        background: #6f42c1;
+        color: white;
+    }
+    
+    .export-btn.excel:hover {
+        background: #28a745;
+        border-color: #28a745;
+    }
+    
+    .export-btn.pdf:hover {
+        background: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    /* Table Container */
+    .table-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        overflow-x: auto;
+    }
+    
+    .student-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1200px;
+    }
+    
+    .student-table thead tr {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+    }
+    
+    .student-table thead th {
+        padding: 15px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-align: left;
+        color: white;
+        white-space: nowrap;
+    }
+    
+    .student-table thead th:first-child {
+        border-radius: 10px 0 0 0;
+    }
+    
+    .student-table thead th:last-child {
+        border-radius: 0 10px 0 0;
+    }
+    
+    .student-table tbody td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+    
+    .student-table tbody tr {
+        transition: all 0.3s;
+    }
+    
+    .student-table tbody tr:hover {
+        background: #f8f9fa;
+        transform: scale(1.01);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.1);
+    }
+    
+    .student-table tbody tr.saved {
+        background: #f0fff4;
+    }
+    
+    .student-table tbody tr.saved:hover {
+        background: #e6ffe6;
+    }
+    
+    /* Student Info */
+    .student-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .student-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .student-details {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .student-name {
+        font-weight: 600;
+        color: #2c3e50;
+        text-decoration: none;
+    }
+    
+    .student-name:hover {
+        color: #6f42c1;
+        text-decoration: underline;
+    }
+    
+    .student-email {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .student-reg {
+        font-size: 0.75rem;
+        color: #9b59b6;
+    }
+    
+    /* Semester Badge */
+    .sem-badge {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    /* Attendance Cell */
+    .attendance-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .attendance-bar-container {
+        width: 60px;
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .attendance-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s;
+    }
+    
+    .attendance-bar-high {
+        background: linear-gradient(90deg, #28a745, #20c997);
+    }
+    
+    .attendance-bar-medium {
+        background: linear-gradient(90deg, #ffc107, #fd7e14);
+    }
+    
+    .attendance-bar-low {
+        background: linear-gradient(90deg, #dc3545, #c82333);
+    }
+    
+    .attendance-value {
+        font-weight: 600;
+        min-width: 45px;
+    }
+    
+    .attendance-high {
+        color: #28a745;
+    }
+    
+    .attendance-medium {
+        color: #ffc107;
+    }
+    
+    .attendance-low {
+        color: #dc3545;
+    }
+    
+    /* Marks Cell */
+    .marks-cell {
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    .marks-high {
+        color: #28a745;
+    }
+    
+    .marks-medium {
+        color: #ffc107;
+    }
+    
+    .marks-low {
+        color: #dc3545;
+    }
+    
+    /* Grade Badge */
+    .grade-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        min-width: 50px;
+        text-align: center;
+    }
+    
+    .grade-aplus {
+        background: #6f42c1;
+        color: white;
+        box-shadow: 0 3px 10px rgba(111, 66, 193, 0.3);
+    }
+    
+    .grade-a {
+        background: #9b59b6;
+        color: white;
+    }
+    
+    .grade-b {
+        background: #3498db;
+        color: white;
+    }
+    
+    .grade-c {
+        background: #f1c40f;
+        color: #2c3e50;
+    }
+    
+    .grade-d {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    /* Risk Badge */
+    .risk-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        min-width: 80px;
+        text-align: center;
+    }
+    
+    .risk-critical {
+        background: #dc3545;
+        color: white;
+        animation: pulse 2s infinite;
+    }
+    
+    .risk-average {
+        background: #ffc107;
+        color: #2c3e50;
+    }
+    
+    .risk-safe {
+        background: #28a745;
+        color: white;
+    }
+    
+    .risk-best {
+        background: #6f42c1;
+        color: white;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    /* Status Badge */
+    .status-badge {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .status-saved {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    /* Action Button */
+    .action-btn {
+        background: transparent;
+        border: 2px solid #6f42c1;
+        color: #6f42c1;
+        padding: 6px 15px;
+        border-radius: 8px;
+        transition: all 0.3s;
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .action-btn:hover {
+        background: #6f42c1;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.3);
+    }
+    
+    /* Search Highlight */
+    .highlight {
+        background: #fff3cd;
+        font-weight: 600;
+    }
+    
+    /* DataTables Customization */
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        margin: 10px 0;
+    }
+    
+    .dataTables_filter input {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 8px 15px;
+        margin-left: 10px;
+        width: 250px;
+    }
+    
+    .dataTables_filter input:focus {
+        border-color: #6f42c1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+    }
+    
+    .dataTables_paginate .paginate_button {
+        padding: 5px 12px;
+        margin: 0 3px;
+        border: 1px solid #e9ecef;
+        border-radius: 5px;
+        color: #6f42c1;
+        cursor: pointer;
+    }
+    
+    .dataTables_paginate .paginate_button.current {
+        background: #6f42c1;
+        color: white !important;
+        border-color: #6f42c1;
+    }
+    
+    .dataTables_paginate .paginate_button:hover {
+        background: #f3e9ff;
+    }
+    
+    /* Summary Section */
+    .summary-section {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+        margin-top: 25px;
+    }
+    
+    .summary-item {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+    }
+    
+    .summary-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    
+    .summary-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .teacher-info-card {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .filter-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .summary-section {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Teacher Info Card -->
+<div class="teacher-info-card">
+    <div class="teacher-avatar-large">
+        {{ current_user.full_name[0] }}
+    </div>
+    <div class="teacher-details">
+        <h2>{{ current_user.full_name }}</h2>
+        <p>
+            <span><i class="fas fa-at"></i> @{{ current_user.username }}</span>
+            <span><i class="fas fa-building"></i> {{ department.name if department else 'Computer Science' }}</span>
+        </p>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <div class="filter-group">
+        <i class="fas fa-filter filter-label"></i>
+        <span class="filter-label">Filter by:</span>
+        <select class="filter-select" id="semesterFilter">
+            <option value="all">All Semesters</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+            <option value="7">Semester 7</option>
+            <option value="8">Semester 8</option>
+        </select>
+        
+        <select class="filter-select" id="riskFilter">
+            <option value="all">All Risks</option>
+            <option value="Critical">Critical</option>
+            <option value="Average">Average</option>
+            <option value="Safe">Safe</option>
+            <option value="Best">Best</option>
+        </select>
+        
+        <select class="filter-select" id="gradeFilter">
+            <option value="all">All Grades</option>
+            <option value="A+">A+</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+        </select>
+    </div>
+    
+    <div class="filter-group">
+        <span class="filter-label">Show:</span>
+        <select class="filter-select" id="statusFilter">
+            <option value="all">All Students</option>
+            <option value="saved">Saved Only</option>
+            <option value="pending">Pending Only</option>
+        </select>
+    </div>
+</div>
+
+{% if students and students|length > 0 %}
+<!-- Statistics Cards with REAL DATA -->
+<!-- Statistics Cards with REAL DATA -->
+{% set total_students = students|length %}
+{% set saved_count = performance_data|length if performance_data else 0 %}
+
+{% set total_internal = 0 %}
+{% set critical_count = 0 %}
+{% set average_count = 0 %}
+{% set safe_count = 0 %}
+{% set best_count = 0 %}
+{% set aplus_count = 0 %}
+{% set a_count = 0 %}
+{% set b_count = 0 %}
+{% set c_count = 0 %}
+{% set d_count = 0 %}
+
+{% if performance_data and performance_data|length > 0 %}
+    {% for perf in performance_data %}
+        {% set total_internal = total_internal + perf.final_internal %}
+        
+        {% if perf.risk_status == 'Critical' %}
+            {% set critical_count = critical_count + 1 %}
+        {% elif perf.risk_status == 'Average' %}
+            {% set average_count = average_count + 1 %}
+        {% elif perf.risk_status == 'Safe' %}
+            {% set safe_count = safe_count + 1 %}
+        {% elif perf.risk_status == 'Best' %}
+            {% set best_count = best_count + 1 %}
+        {% endif %}
+        
+        {% set grade = 'A+' if perf.final_internal >= 18 else 'A' if perf.final_internal >= 15 else 'B' if perf.final_internal >= 12 else 'C' if perf.final_internal >= 10 else 'D' %}
+        {% if grade == 'A+' %}
+            {% set aplus_count = aplus_count + 1 %}
+        {% elif grade == 'A' %}
+            {% set a_count = a_count + 1 %}
+        {% elif grade == 'B' %}
+            {% set b_count = b_count + 1 %}
+        {% elif grade == 'C' %}
+            {% set c_count = c_count + 1 %}
+        {% elif grade == 'D' %}
+            {% set d_count = d_count + 1 %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+{% set avg_internal = (total_internal / saved_count)|round(1) if saved_count > 0 else 0 %}
+{% set completion = (saved_count / total_students * 100)|round if total_students > 0 else 0 %}
+
+<div class="stats-cards">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_students }}</div>
+        <div class="stat-label">TOTAL STUDENTS</div>
+        <div class="stat-trend">{{ saved_count }} saved • {{ total_students - saved_count }} pending</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-value">{{ avg_internal }}</div>
+        <div class="stat-label">AVERAGE MARKS</div>
+        <div class="stat-trend">out of 20</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-value {% if critical_count > 0 %}text-danger{% endif %}">{{ critical_count }}</div>
+        <div class="stat-label">CRITICAL RISK</div>
+        <div class="stat-trend">{{ ((critical_count / saved_count) * 100)|round if saved_count > 0 else 0 }}% of saved</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-value">{{ completion }}%</div>
+        <div class="stat-label">COMPLETION</div>
+        <div class="stat-trend">{{ saved_count }}/{{ total_students }} students</div>
+    </div>
+</div>
+<!-- Export Buttons -->
+<div class="export-buttons">
+    <button class="export-btn excel" onclick="exportToExcel()">
+        <i class="fas fa-file-excel"></i> Export to Excel
+    </button>
+    <button class="export-btn pdf" onclick="exportToPDF()">
+        <i class="fas fa-file-pdf"></i> Export PDF
+    </button>
+    <button class="export-btn" onclick="window.print()">
+        <i class="fas fa-print"></i> Print
+    </button>
+</div>
+
+<!-- Student Results Table with REAL DATA -->
+<div class="table-container">
+    <table class="student-table" id="resultsTable">
+        <thead>
+            <tr>
+                <th>S.No</th>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Reg No</th>
+                <th>Sem</th>
+                <th>Attendance</th>
+                <th>Marks/25</th>
+                <th>Grade</th>
+                <th>Risk</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            {% set perf = performances.get(student.id) %}
+            <tr class="{% if perf %}saved{% endif %}" 
+                data-semester="{{ student.current_semester }}"
+                data-risk="{{ perf.risk_status if perf else 'None' }}" 
+                data-grade="{% if perf %}{{ 'A+' if perf.final_internal >= 18 else 'A' if perf.final_internal >= 15 else 'B' if perf.final_internal >= 12 else 'C' if perf.final_internal >= 10 else 'D' }}{% else %}None{% endif %}"
+                data-status="{% if perf %}saved{% else %}pending{% endif %}">
+                
+                <td>{{ loop.index }}</td>
+                <td>
+                    <span class="badge bg-purple-soft text-purple">{{ student.student_id }}</span>
+                </td>
+                <td>
+                    <div class="student-info">
+                        <div class="student-avatar">{{ student.name[0] }}</div>
+                        <div class="student-details">
+                            <a href="{{ url_for('teacher.student_detail', student_id=student.id) }}" class="student-name">
+                                {{ student.name }}
+                            </a>
+                        
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="student-reg">{{ student.registration_number }}</span>
+                </td>
+                <td>
+                    <span class="sem-badge">Sem {{ student.current_semester }}</span>
+                </td>
+                
+                {% if perf %}
+                <!-- REAL DATA FROM YOUR DATABASE -->
+                <td>
+                    <div class="attendance-cell">
+                        <span class="attendance-value 
+                            {% if perf.attendance >= 75 %}attendance-high
+                            {% elif perf.attendance >= 60 %}attendance-medium
+                            {% else %}attendance-low{% endif %}">
+                            {{ perf.attendance }}%
+                        </span>
+                        <div class="attendance-bar-container">
+                            <div class="attendance-bar-fill 
+                                {% if perf.attendance >= 75 %}attendance-bar-high
+                                {% elif perf.attendance >= 60 %}attendance-bar-medium
+                                {% else %}attendance-bar-low{% endif %}" 
+                                style="width: {{ perf.attendance }}%">
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="marks-cell 
+                        {% if perf.final_internal >= 18 %}marks-high
+                        {% elif perf.final_internal >= 12 %}marks-medium
+                        {% else %}marks-low{% endif %}">
+                        {{ perf.final_internal|round(1) }}/20
+                    </span>
+                </td>
+                <td>
+                    {% set grade = 'A+' if perf.final_internal >= 18 else 'A' if perf.final_internal >= 15 else 'B' if perf.final_internal >= 12 else 'C' if perf.final_internal >= 10 else 'D' %}
+                    <span class="grade-badge 
+                        {% if grade == 'A+' %}grade-aplus
+                        {% elif grade == 'A' %}grade-a
+                        {% elif grade == 'B' %}grade-b
+                        {% elif grade == 'C' %}grade-c
+                        {% else %}grade-d{% endif %}">
+                        {{ grade }}
+                    </span>
+                </td>
+                <td>
+                    <span class="risk-badge 
+                        {% if perf.risk_status == 'Critical' %}risk-critical
+                        {% elif perf.risk_status == 'Average' %}risk-average
+                        {% elif perf.risk_status == 'Best' %}risk-best
+                        {% else %}risk-safe{% endif %}">
+                        {{ perf.risk_status }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge status-saved">
+                        <i class="fas fa-check-circle me-1"></i>Saved
+                    </span>
+                </td>
+                {% else %}
+                <!-- NO DATA YET -->
+                <td>
+                    <div class="attendance-cell">
+                        <span class="attendance-value text-muted">--%</span>
+                        <div class="attendance-bar-container">
+                            <div class="attendance-bar-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="marks-cell text-muted">--/20</span>
+                </td>
+                <td>
+                    <span class="grade-badge">--</span>
+                </td>
+                <td>
+                    <span class="risk-badge">--</span>
+                </td>
+                <td>
+                    <span class="status-badge status-pending">
+                        <i class="fas fa-clock me-1"></i>Pending
+                    </span>
+                </td>
+                {% endif %}
+                
+                <td>
+                    <a href="{{ url_for('teacher.enter_marks', subject_id=subject.id, student_id=student.id) }}" class="action-btn">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+{% else %}
+<!-- Empty State -->
+<div class="empty-state text-center py-5">
+    <i class="fas fa-users-slash fa-4x text-muted mb-3"></i>
+    <h4>No Students Found</h4>
+    <p class="text-muted">There are no students enrolled in {{ subject.name }}.</p>
+    <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-purple mt-3">
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter functionality
+$(document).ready(function() {
+    function applyFilters() {
+        var semester = $('#semesterFilter').val();
+        var risk = $('#riskFilter').val();
+        var grade = $('#gradeFilter').val();
+        var status = $('#statusFilter').val();
+        
+        $('#resultsTable tbody tr').each(function() {
+            var showRow = true;
+            var row = $(this);
+            
+            // Semester filter
+            if (semester != 'all' && row.data('semester') != semester) {
+                showRow = false;
+            }
+            
+            // Risk filter
+            if (risk != 'all' && row.data('risk') != risk) {
+                showRow = false;
+            }
+            
+            // Grade filter
+            if (grade != 'all' && row.data('grade') != grade) {
+                showRow = false;
+            }
+            
+            // Status filter
+            if (status == 'saved' && row.data('status') != 'saved') {
+                showRow = false;
+            }
+            if (status == 'pending' && row.data('status') != 'pending') {
+                showRow = false;
+            }
+            
+            if (showRow) {
+                row.show();
+            } else {
+                row.hide();
+            }
+        });
+    }
+    
+    $('#semesterFilter, #riskFilter, #gradeFilter, #statusFilter').change(applyFilters);
+    
+    // Initialize DataTable with search
+    var table = $('#resultsTable').DataTable({
+        responsive: true,
+        pageLength: 10,
+        order: [[2, 'asc']], // Sort by name
+        language: {
+            search: "<i class='fas fa-search'></i> Search students...",
+            searchPlaceholder: "Type name, reg no, or any text...",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ students",
+            paginate: {
+                first: '<i class="fas fa-angle-double-left"></i>',
+                previous: '<i class="fas fa-angle-left"></i>',
+                next: '<i class="fas fa-angle-right"></i>',
+                last: '<i class="fas fa-angle-double-right"></i>'
+            }
+        },
+        columnDefs: [
+            { orderable: false, targets: [10] } // Disable sorting on action column
+        ],
+        initComplete: function() {
+            applyFilters();
+            
+            // Add search highlight
+            this.api().on('search', function() {
+                var searchTerm = this.search();
+                if (searchTerm) {
+                    $('#resultsTable tbody td').each(function() {
+                        var text = $(this).text();
+                        if (text.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1) {
+                            $(this).addClass('highlight');
+                        } else {
+                            $(this).removeClass('highlight');
+                        }
+                    });
+                } else {
+                    $('#resultsTable tbody td').removeClass('highlight');
+                }
+            });
+        }
+    });
+    
+    // Custom search input styling
+    $('.dataTables_filter input').attr('placeholder', 'Search by name, reg no...');
+});
+
+// Export to Excel function
+function exportToExcel() {
+    var table = document.getElementById('resultsTable');
+    var rows = table.querySelectorAll('tr');
+    var csv = [];
+    
+    // Get headers
+    var headers = [];
+    table.querySelectorAll('thead th').forEach(th => {
+        headers.push(th.innerText);
+    });
+    csv.push(headers.join(','));
+    
+    // Get data rows (only visible ones)
+    $('#resultsTable tbody tr:visible').each(function() {
+        var rowData = [];
+        $(this).find('td').each(function() {
+            var text = $(this).text().trim().replace(/,/g, ';');
+            rowData.push('"' + text + '"');
+        });
+        csv.push(rowData.join(','));
+    });
+    
+    // Download CSV
+    var csvContent = csv.join('\n');
+    var blob = new Blob([csvContent], { type: 'text/csv' });
+    var url = window.URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '{{ subject.code }}_results.csv';
+    a.click();
+}
+
+// Export to PDF function
+function exportToPDF() {
+    var table = document.getElementById('resultsTable').cloneNode(true);
+    var rows = table.querySelectorAll('tr');
+    
+    // Remove action column from PDF
+    rows.forEach(row => {
+        if (row.cells.length > 10) {
+            row.deleteCell(10);
+        }
+    });
+    
+    var printWindow = window.open('', '_blank');
+    
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>{{ subject.name }} Results</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h1 { color: #6f42c1; }
+                    .header { margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th { background: #6f42c1; color: white; padding: 10px; text-align: left; }
+                    td { padding: 8px; border-bottom: 1px solid #ddd; }
+                    .grade-aplus { background: #6f42c1; color: white; padding: 3px 8px; border-radius: 12px; }
+                    .grade-a { background: #9b59b6; color: white; padding: 3px 8px; border-radius: 12px; }
+                    .grade-b { background: #3498db; color: white; padding: 3px 8px; border-radius: 12px; }
+                    .grade-c { background: #f1c40f; color: #2c3e50; padding: 3px 8px; border-radius: 12px; }
+                    .grade-d { background: #e74c3c; color: white; padding: 3px 8px; border-radius: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>{{ subject.name }} - Results</h1>
+                    <p>{{ subject.code }} | Semester {{ subject.semester }}</p>
+                    <p>Generated on: ${new Date().toLocaleDateString()}</p>
+                </div>
+                ${table.outerHTML}
+            </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,512 @@
+{% extends "principal/base_principal.html" %}
+
+{% block title %}Student Performance - Principal{% endblock %}
+
+{% block header_title %}Student Performance{% endblock %}
+{% block header_subtitle %}Complete analysis with teacher details{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* =====================================================
+       COMPACT STUDENT PERFORMANCE TABLE
+       ===================================================== */
+    
+    /* Filter Section */
+    .filter-section {
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 15px;
+        border: 1px solid #e9ecef;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: flex-end;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .filter-group label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6f42c1;
+        margin-bottom: 2px;
+        display: block;
+    }
+    
+    .filter-select, .filter-input {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        font-size: 0.8rem;
+    }
+    
+    .filter-select:focus, .filter-input:focus {
+        border-color: #6f42c1;
+        outline: none;
+    }
+    
+    .btn-apply {
+        background: #6f42c1;
+        color: white;
+        border: none;
+        padding: 6px 15px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    
+    .btn-reset {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 6px 15px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    
+    /* Stats Summary */
+    .stats-summary {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .stat-badge {
+        background: white;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 0.75rem;
+        border: 1px solid #e9ecef;
+    }
+    
+    .stat-badge.total { background: #6f42c1; color: white; }
+    .stat-badge.critical { background: #dc3545; color: white; }
+    
+    /* Table Container */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        overflow: hidden;
+        margin-bottom: 15px;
+    }
+    
+    .performance-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+    }
+    
+    .performance-table thead {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+    }
+    
+    .performance-table th {
+        padding: 8px 5px;
+        font-weight: 600;
+        text-align: left;
+        white-space: nowrap;
+    }
+    
+    .performance-table td {
+        padding: 6px 5px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+    
+    .performance-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    
+    /* Student Info */
+    .student-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .student-id {
+        font-size: 0.65rem;
+        color: #6f42c1;
+        background: #f3e9ff;
+        padding: 2px 4px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    
+    /* Subject Tags */
+    .subject-tag {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 0.65rem;
+        display: inline-block;
+        margin: 1px;
+        white-space: nowrap;
+    }
+    
+    .subject-code {
+        font-family: monospace;
+        background: #e9ecef;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-size: 0.6rem;
+    }
+    
+    /* Teacher Info */
+    .teacher-name {
+        font-size: 0.65rem;
+        color: #28a745;
+    }
+    
+    .teacher-badge {
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 0.65rem;
+        display: inline-block;
+    }
+    
+    /* Risk Badges */
+    .risk-badge {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.65rem;
+        display: inline-block;
+        min-width: 60px;
+        text-align: center;
+    }
+    
+    .risk-critical { background: #dc3545; color: white; }
+    .risk-high { background: #fd7e14; color: white; }
+    .risk-average { background: #ffc107; color: #2c3e50; }
+    .risk-safe { background: #28a745; color: white; }
+    .risk-best { background: #6f42c1; color: white; }
+    
+    /* Marks */
+    .marks-highlight {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    /* Attendance Bar */
+    .attendance-bar {
+        width: 60px;
+        height: 4px;
+        background: #e9ecef;
+        border-radius: 2px;
+        overflow: hidden;
+        display: inline-block;
+        margin-left: 5px;
+    }
+    
+    .attendance-fill {
+        height: 100%;
+        border-radius: 2px;
+    }
+    
+    .attendance-fill.good { background: #28a745; }
+    .attendance-fill.warning { background: #ffc107; }
+    .attendance-fill.danger { background: #dc3545; }
+    
+    /* Pagination */
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        font-size: 0.8rem;
+    }
+    
+    .pagination {
+        display: flex;
+        gap: 3px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .page-item {
+        display: inline-block;
+    }
+    
+    .page-link {
+        display: block;
+        padding: 4px 8px;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        color: #6f42c1;
+        text-decoration: none;
+        font-size: 0.75rem;
+    }
+    
+    .page-link:hover {
+        background: #f3e9ff;
+    }
+    
+    .page-item.active .page-link {
+        background: #6f42c1;
+        color: white;
+        border-color: #6f42c1;
+    }
+    
+    .page-item.disabled .page-link {
+        color: #adb5bd;
+        pointer-events: none;
+    }
+    
+    .page-info {
+        color: #6c757d;
+        font-size: 0.75rem;
+    }
+    
+    /* Export Button */
+    .btn-export {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .btn-export:hover {
+        background: #218838;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .filter-group {
+            min-width: 120px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .performance-table {
+            font-size: 0.7rem;
+        }
+        
+        .filter-section {
+            flex-direction: column;
+        }
+        
+        .filter-group {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Filter Section -->
+<div class="filter-section">
+    <form method="GET" action="{{ url_for('principal.student_performance') }}" style="display: contents;">
+        <div class="filter-group">
+            <label><i class="fas fa-building me-1"></i> Department</label>
+            <select name="department" class="filter-select">
+                <option value="all" {% if filters.department == 'all' %}selected{% endif %}>All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if filters.department == dept.id|string %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label><i class="fas fa-layer-group me-1"></i> Semester</label>
+            <select name="semester" class="filter-select">
+                <option value="all" {% if filters.semester == 'all' %}selected{% endif %}>All Semesters</option>
+                {% for sem in semesters %}
+                <option value="{{ sem }}" {% if filters.semester == sem %}selected{% endif %}>
+                    Semester {{ sem }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label><i class="fas fa-exclamation-triangle me-1"></i> Risk</label>
+            <select name="risk" class="filter-select">
+                <option value="all" {% if filters.risk == 'all' %}selected{% endif %}>All Risks</option>
+                <option value="Critical">Critical</option>
+                <option value="High Risk">High Risk</option>
+                <option value="Average">Average</option>
+                <option value="Safe">Safe</option>
+                <option value="Best">Best</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label><i class="fas fa-search me-1"></i> Search</label>
+            <input type="text" name="search" class="filter-input" value="{{ filters.search }}" placeholder="Name or Reg No...">
+        </div>
+        
+        <div class="filter-group" style="flex: 0 0 auto;">
+            <button type="submit" class="btn-apply">
+                <i class="fas fa-filter me-1"></i> Apply
+            </button>
+            <a href="{{ url_for('principal.student_performance') }}" class="btn-reset ms-1">
+                <i class="fas fa-redo-alt me-1"></i> Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Stats Summary -->
+<div class="stats-summary">
+    <span class="stat-badge total">
+        <i class="fas fa-users me-1"></i> Total: {{ total_students }}
+    </span>
+    <span class="stat-badge">
+        <i class="fas fa-check-circle text-success me-1"></i> With Data: {{ total_with_data }}
+    </span>
+    <span class="stat-badge critical">
+        <i class="fas fa-exclamation-circle me-1"></i> Critical: {{ critical_count }}
+    </span>
+</div>
+
+<!-- Performance Table -->
+<div class="table-container">
+    <table class="performance-table">
+        <thead>
+            <tr>
+                <th>S.No</th>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Dept</th>
+                <th>Sem</th>
+                <th>Subjects</th>
+                <th>Avg Marks</th>
+                <th>Attendance</th>
+                <th>Risk</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in student_data %}
+            <tr>
+                <td>{{ loop.index + (current_page - 1) * per_page }}</td>
+                <td>
+                    <span class="student-id">{{ student.student_id }}</span>
+                </td>
+                <td>
+                    <span class="student-name">{{ student.name }}</span>
+                    <div class="teacher-name">{{ student.email }}</div>
+                </td>
+                <td>{{ student.department[:8] }}</td>
+                <td>{{ student.semester }}</td>
+                <td>
+                    {% for subject in student.subjects[:2] %}
+                    <span class="subject-tag" title="{{ subject.subject_name }}">
+                        {{ subject.subject_code }}
+                        <i class="fas fa-user text-purple ms-1" title="{{ subject.teacher_name }}"></i>
+                    </span>
+                    {% endfor %}
+                    {% if student.subject_count > 2 %}
+                    <span class="subject-tag">+{{ student.subject_count-2 }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="marks-highlight">{{ student.avg_marks }}/20</span>
+                </td>
+                <td>
+                    {{ student.avg_attendance }}%
+                    <div class="attendance-bar">
+                        <div class="attendance-fill 
+                            {% if student.avg_attendance >= 75 %}good
+                            {% elif student.avg_attendance >= 70 %}warning
+                            {% else %}danger{% endif %}" 
+                            style="width: {{ student.avg_attendance }}%;">
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="risk-badge risk-{{ student.overall_risk|lower|replace(' ', '') }}">
+                        {{ student.overall_risk }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('principal.student_details', student_id=student.id) }}" class="btn btn-sm btn-outline-purple py-0 px-2" style="font-size: 0.7rem;">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="10" class="text-center py-4 text-muted">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <p>No students found</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div class="pagination-container">
+    <div class="page-info">
+        Showing {{ ((current_page - 1) * per_page) + 1 }} to 
+        {{ [current_page * per_page, total_students]|min }} of {{ total_students }} students
+    </div>
+    
+    <ul class="pagination">
+        <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('principal.student_performance', page=1, department=filters.department, semester=filters.semester, risk=filters.risk, search=filters.search) }}">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+        </li>
+        <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('principal.student_performance', page=current_page-1, department=filters.department, semester=filters.semester, risk=filters.risk, search=filters.search) }}">
+                <i class="fas fa-angle-left"></i>
+            </a>
+        </li>
+        
+        {% for p in range([1, current_page-2]|max, [total_pages+1, current_page+3]|min) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('principal.student_performance', page=p, department=filters.department, semester=filters.semester, risk=filters.risk, search=filters.search) }}">
+                {{ p }}
+            </a>
+        </li>
+        {% endfor %}
+        
+        <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('principal.student_performance', page=current_page+1, department=filters.department, semester=filters.semester, risk=filters.risk, search=filters.search) }}">
+                <i class="fas fa-angle-right"></i>
+            </a>
+        </li>
+        <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('principal.student_performance', page=total_pages, department=filters.department, semester=filters.semester, risk=filters.risk, search=filters.search) }}">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        </li>
+    </ul>
+    
+    <button class="btn-export" onclick="exportToCSV()">
+        <i class="fas fa-download me-1"></i> Export
+    </button>
+</div>
+
+<script>
+function exportToCSV() {
+    // Collect current filters
+    const params = new URLSearchParams(window.location.search);
+    window.location.href = "{{ url_for('principal.export_student_performance') }}?" + params.toString();
+}
+</script>
+{% endblock %}

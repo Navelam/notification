@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Exam Timetable - Public View{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-calendar-alt text-purple me-2"></i>Exam Timetable</h2>
+            <p class="text-muted">View all scheduled examinations</p>
+            <hr>
+        </div>
+    </div>
+
+    {% if grouped %}
+        {% for date_key, group in grouped.items()|sort %}
+        <div class="card mb-4">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    {{ group.date.strftime('%A, %d %B %Y') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Department</th>
+                                <th>Semester</th>
+                                <th>Subject Code</th>
+                                <th>Subject Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in group.exams %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if exam.exam_time == '10AM' %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ exam.exam_time }}
+                                    </span>
+                                </td>
+                                <td>{{ exam.department.name }}</td>
+                                <td>Sem {{ exam.semester }}</td>
+                                <td>{{ exam.subject.code }}</td>
+                                <td>{{ exam.subject.name }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <i class="fas fa-calendar-times fa-4x mb-3"></i>
+        <h4>No Exams Scheduled</h4>
+        <p>No exams have been published yet.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-purple mt-3">
+            <i class="fas fa-home me-2"></i>Back to Home
+        </a>
+    </div>
+    {% endif %}
+    
+    <div class="text-center mt-3">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left me-2"></i>Back to Home
+        </a>
+    </div>
+</div>
+{% endblock %}

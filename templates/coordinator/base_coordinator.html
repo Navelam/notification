@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Coordinator - SPAS{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <!-- Datepicker -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+    
+    <style>
+        /* =====================================================
+           DESIGN SYSTEM VARIABLES
+        ===================================================== */
+        :root {
+            --primary-50: #f3e9ff;
+            --primary-100: #e0d0ff;
+            --primary-200: #c2a8ff;
+            --primary-300: #a47cff;
+            --primary-400: #8650ff;
+            --primary-500: #6f42c1;
+            --primary-600: #5a32a3;
+            --primary-700: #4a2982;
+            --primary-800: #3a2062;
+            --primary-900: #2a1842;
+            
+            --secondary-50: #e8f5e9;
+            --secondary-500: #28a745;
+            --secondary-600: #218838;
+            
+            --accent-orange: #fd7e14;
+            --accent-yellow: #ffc107;
+            --accent-red: #dc3545;
+            --accent-blue: #17a2b8;
+            --accent-teal: #20c997;
+            
+            --gray-50: #f8f9fa;
+            --gray-100: #f1f3f5;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            --gray-900: #212529;
+            
+            --white: #ffffff;
+            
+            --shadow-xs: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-md: 0 6px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 15px 25px rgba(111, 66, 193, 0.15);
+            --shadow-xl: 0 20px 40px rgba(111, 66, 193, 0.2);
+            --shadow-2xl: 0 25px 50px rgba(111, 66, 193, 0.25);
+            
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-2xl: 24px;
+            --radius-full: 9999px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--gray-50);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
+        .sidebar {
+            width: 280px;
+            background: var(--white);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            position: fixed;
+            height: 100vh;
+            border-right: 1px solid var(--gray-200);
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+            color: var(--white);
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .sidebar-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+            font-weight: 600;
+            border: 3px solid var(--white);
+            backdrop-filter: blur(5px);
+        }
+
+        .sidebar-header h4 {
+            margin: 10px 0 5px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .sidebar-header p {
+            margin: 0;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* ===== FIXED: Exam Coordinator Badge - White background with purple text ===== */
+        .badge-coordinator {
+            background: white !important;
+            color: var(--primary-600) !important;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+            border: none;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+            list-style: none;
+        }
+
+        .sidebar-section {
+            margin-bottom: 15px;
+        }
+
+        .sidebar-section-title {
+            padding: 10px 25px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray-600);
+            font-weight: 600;
+        }
+
+        .sidebar-menu-item {
+            list-style: none;
+        }
+
+        .sidebar-menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 25px;
+            color: var(--gray-700);
+            text-decoration: none;
+            border-left: 4px solid transparent;
+            transition: var(--transition-base);
+            font-weight: 500;
+        }
+
+        .sidebar-menu-link i {
+            width: 25px;
+            margin-right: 10px;
+            color: var(--primary-500);
+            font-size: 1.1rem;
+        }
+
+        .sidebar-menu-link:hover {
+            background: var(--primary-50);
+            border-left-color: var(--primary-500);
+            color: var(--primary-600);
+        }
+
+        .sidebar-menu-link:hover i {
+            color: var(--primary-600);
+            transform: scale(1.1);
+        }
+
+        .sidebar-menu-link.active {
+            background: var(--primary-50);
+            border-left-color: var(--primary-500);
+            color: var(--primary-600);
+            font-weight: 600;
+        }
+
+        .sidebar-menu-link.active i {
+            color: var(--primary-600);
+        }
+
+        .sidebar-menu-link.logout {
+            margin-top: 20px;
+            border-top: 1px solid var(--gray-200);
+            padding-top: 20px;
+        }
+
+        .sidebar-menu-link.logout i {
+            color: var(--accent-red);
+        }
+
+        .sidebar-menu-link.logout:hover {
+            background: #fff5f5;
+            border-left-color: var(--accent-red);
+        }
+
+        /* Setup status indicator */
+        .setup-badge {
+            margin-left: auto;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: var(--accent-yellow);
+            color: var(--gray-800);
+        }
+
+        .setup-badge.success {
+            background: var(--secondary-500);
+            color: var(--white);
+        }
+
+        /* =====================================================
+           MAIN CONTENT
+        ===================================================== */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+            background: var(--gray-50);
+            min-height: 100vh;
+        }
+
+        .top-header {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 20px 25px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+        }
+
+        .header-title h2 {
+            color: var(--primary-600);
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header-title p {
+            margin: 5px 0 0;
+            color: var(--gray-600);
+            font-size: 0.95rem;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-400));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1.2rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-md);
+        }
+
+        .content-area {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 30px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+        }
+
+        /* =====================================================
+           UTILITY CLASSES
+        ===================================================== */
+        .bg-purple {
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-400));
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-400));
+            color: var(--white);
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            transition: var(--transition-base);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-purple:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+            color: var(--white);
+        }
+
+        .btn-outline-purple {
+            border: 2px solid var(--primary-500);
+            color: var(--primary-500);
+            background: transparent;
+            padding: 8px 18px;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            transition: var(--transition-base);
+        }
+
+        .btn-outline-purple:hover {
+            background: var(--primary-500);
+            color: var(--white);
+        }
+
+        /* =====================================================
+           ROOM CARDS
+        ===================================================== */
+        .room-card {
+            transition: var(--transition-base);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .room-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary-300);
+        }
+
+        .seat-layout {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
+
+        .seat {
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            padding: 5px;
+            text-align: center;
+            font-size: 0.8rem;
+            transition: var(--transition-fast);
+        }
+
+        .seat.occupied {
+            background-color: var(--primary-50);
+            border-color: var(--primary-500);
+            color: var(--primary-700);
+            font-weight: 500;
+        }
+
+        /* =====================================================
+           ALERTS
+        ===================================================== */
+        .alert {
+            border-radius: var(--radius-lg);
+            border: none;
+            border-left: 4px solid;
+            box-shadow: var(--shadow-md);
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, var(--secondary-50), var(--white));
+            color: var(--secondary-700);
+            border-left-color: var(--secondary-500);
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #fff5f5, var(--white));
+            color: var(--accent-red);
+            border-left-color: var(--accent-red);
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #fff9e6, var(--white));
+            color: #856404;
+            border-left-color: var(--accent-yellow);
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #d1ecf1, var(--white));
+            color: #0c5460;
+            border-left-color: var(--accent-blue);
+        }
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .top-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            .header-title p {
+                margin-left: 0;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-avatar">
+                {{ current_user.full_name[0] }}
+            </div>
+            <h4>{{ current_user.full_name }}</h4>
+            <p>@{{ current_user.username }}</p>
+            <!-- FIXED: Changed from bg-light text-purple to custom badge-coordinator class -->
+            <span class="badge-coordinator">Exam Coordinator</span>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <!-- MAIN Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">MAIN</div>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('coordinator.dashboard') }}" 
+                       class="sidebar-menu-link {% if request.endpoint == 'coordinator.dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+            </div>
+            
+            <!-- TIMETABLE Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">TIMETABLE</div>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('coordinator.create_timetable') }}" 
+                       class="sidebar-menu-link {% if request.endpoint == 'coordinator.create_timetable' %}active{% endif %}">
+                        <i class="fas fa-plus-circle"></i> Create Timetable
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('coordinator.timetable_view') }}" 
+                       class="sidebar-menu-link {% if request.endpoint == 'coordinator.timetable_view' %}active{% endif %}">
+                        <i class="fas fa-calendar-alt"></i> View Timetable
+                    </a>
+                </li>
+            </div>
+            
+            <!-- ROOM ALLOCATION Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">ROOM ALLOCATION</div>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('coordinator.room_allocation_dashboard') }}" 
+                       class="sidebar-menu-link {% if request.endpoint == 'coordinator.room_allocation_dashboard' %}active{% endif %}">
+                        <i class="fas fa-door-open"></i> Room Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('coordinator.allocate_rooms') }}" 
+                       class="sidebar-menu-link {% if request.endpoint == 'coordinator.allocate_rooms' %}active{% endif %}">
+                        <i class="fas fa-magic"></i> Allocate Rooms
+                    </a>
+                </li>
+            </div>
+            
+            <!-- INVIGILATOR Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">INVIGILATOR</div>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('coordinator.invigilator_allocation') }}" 
+                       class="sidebar-menu-link {% if request.endpoint == 'coordinator.invigilator_allocation' %}active{% endif %}">
+                        <i class="fas fa-user-tie"></i> Invigilators
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('coordinator.view_all_invigilators') }}" 
+                       class="sidebar-menu-link {% if request.endpoint == 'coordinator.view_all_invigilators' %}active{% endif %}">
+                        <i class="fas fa-clipboard-list"></i> All Invigilators
+                    </a>
+                </li>
+            </div>
+            
+            <!-- NOTIFICATIONS Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">NOTIFICATIONS</div>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('coordinator.notifications_dashboard') }}" 
+                       class="sidebar-menu-link {% if request.endpoint == 'coordinator.notifications_dashboard' or request.endpoint == 'coordinator.create_notification' or request.endpoint == 'coordinator.edit_notification' %}active{% endif %}">
+                        <i class="fas fa-bell"></i> Notifications
+                    </a>
+                </li>
+            </div>
+
+            <!-- ACCOUNT Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">ACCOUNT</div>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('auth.profile') }}" class="sidebar-menu-link">
+                        <i class="fas fa-user-circle"></i> My Profile
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{{ url_for('auth.change_password') }}" class="sidebar-menu-link">
+                        <i class="fas fa-key"></i> Change Password
+                    </a>
+                </li>
+            </div>
+            
+            <!-- Logout -->
+            <li class="sidebar-menu-item">
+                <a href="{{ url_for('auth.logout') }}" class="sidebar-menu-link logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-header">
+            <div class="header-title">
+                <h2>{% block header_title %}Coordinator Dashboard{% endblock %}</h2>
+                <p>{% block header_subtitle %}Manage exam timetables and room allocation{% endblock %}</p>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-end">
+                    <h6 class="mb-0">{{ current_user.full_name }}</h6>
+                    <small class="text-muted">{{ now.strftime('%d %B, %Y') }}</small>
+                </div>
+                <div class="user-avatar">
+                    {{ current_user.full_name[0] }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Content -->
+        <div class="content-area">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            $('.datatable').DataTable({
+                responsive: true,
+                pageLength: 10,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search..."
+                }
+            });
+            
+            $('.datepicker').datepicker({
+                format: 'yyyy-mm-dd',
+                startDate: new Date(),
+                autoclose: true,
+                todayHighlight: true
+            });
+            
+            // Auto-hide alerts
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

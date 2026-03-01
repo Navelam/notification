@@ -1,0 +1,429 @@
+{% extends "hod/base_hod.html" %}
+
+{% block title %}Assign Teachers - SPAS{% endblock %}
+
+{% block header_title %}Assign Teachers{% endblock %}
+{% block header_subtitle %}Manage teacher-subject assignments{% endblock %}
+
+{% block extra_css %}
+<style>
+    .assignment-form {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .form-title {
+        color: #6f42c1;
+        margin-bottom: 20px;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .form-title i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 5px;
+        display: block;
+        font-size: 0.9rem;
+    }
+    
+    .form-control, .form-select {
+        width: 100%;
+        padding: 10px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #6f42c1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-assign {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .btn-assign:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.3);
+    }
+    
+    .btn-ai {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        flex: 1;
+        min-width: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .btn-ai:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-ai i {
+        font-size: 1.2rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .btn-reset {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .btn-reset:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #f3e9ff, #ffffff);
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #6f42c1;
+        line-height: 1.2;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .current-assignments {
+        margin-top: 30px;
+    }
+    
+    .table {
+        margin: 0;
+    }
+    
+    .badge-ai {
+        background: #28a745;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        margin-left: 5px;
+    }
+    
+    .btn-remove {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-remove:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        color: white;
+    }
+    
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Card -->
+<div class="stats-card" id="statsCard">
+    <div class="stat-item">
+        <div class="stat-value">{{ teachers|length }}</div>
+        <div class="stat-label">Total Teachers</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value">{{ subjects|length }}</div>
+        <div class="stat-label">Total Subjects</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value" id="assignedCount">{{ assignments|length }}</div>
+        <div class="stat-label">Assigned</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value" id="avgWorkload">0</div>
+        <div class="stat-label">Avg Workload</div>
+    </div>
+</div>
+
+<!-- Action Buttons Row 1 -->
+<div class="action-buttons">
+    <!-- Manual Assignment Button -->
+    <button type="button" class="btn-assign" data-bs-toggle="collapse" data-bs-target="#manualForm">
+        <i class="fas fa-user-plus me-2"></i>Manual Assignment
+    </button>
+    
+    <!-- AI Auto Assign Button -->
+    <form method="POST" action="{{ url_for('hod.ai_assign_teachers') }}" style="flex: 1;" 
+          onsubmit="return confirmAI()">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn-ai" id="aiAssignBtn">
+            <i class="fas fa-robot"></i>
+            <span>AI Auto Assign</span>
+            <i class="fas fa-magic"></i>
+        </button>
+    </form>
+    
+    <!-- Reset All Button -->
+    <!-- Reset All Button -->
+<form method="POST" action="{{ url_for('hod.reset_assignments') }}" style="flex: 1;"
+      onsubmit="return confirm('⚠️ Are you sure you want to reset ALL assignments?\n\nThis will remove all current teacher-subject assignments and cannot be undone.')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn-reset" id="resetBtn">
+        <i class="fas fa-redo-alt me-2"></i>Reset All
+    </button>
+</form>
+</div>
+
+
+
+<!-- Manual Assignment Form (Collapsible) -->
+<div class="collapse" id="manualForm">
+    <div class="assignment-form">
+        <h5 class="form-title"><i class="fas fa-user-plus"></i>Manual Assignment</h5>
+        
+        <form method="POST" action="{{ url_for('hod.assign_teachers') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label><i class="fas fa-user me-2"></i>Select Teacher</label>
+                    <select name="teacher_id" class="form-select" required>
+                        <option value="">Choose teacher...</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-book me-2"></i>Select Subject</label>
+                    <select name="subject_id" class="form-select" required>
+                        <option value="">Choose subject...</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }} (Sem {{ subject.semester_id }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-layer-group me-2"></i>Semester</label>
+                    <select name="semester_id" class="form-select" required>
+                        <option value="">Choose semester...</option>
+                        {% for sem in semesters %}
+                        <option value="{{ sem }}">Semester {{ sem }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-calendar me-2"></i>Academic Year</label>
+                    <input type="text" name="academic_year" class="form-control" 
+                           value="2025-2026" readonly>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-assign" style="width: 100%;">
+                <i class="fas fa-plus-circle me-2"></i>Assign Teacher
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Current Assignments -->
+<div class="current-assignments">
+    <h5 class="form-title"><i class="fas fa-list"></i>Current Assignments</h5>
+    
+    <div class="table-responsive">
+        <table class="table datatable">
+            <thead>
+                <tr>
+                    <th>Teacher</th>
+                    <th>Subject</th>
+                    <th>Code</th>
+                    <th>Semester</th>
+                    <th>Assigned On</th>
+                    <th>Method</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment, teacher, subject in assignments %}
+                <tr>
+                    <td>
+                        <i class="fas fa-user-circle text-purple me-2"></i>
+                         {{ teacher.full_name if teacher else 'Unknown Teacher' }}
+                    </td>
+                    <td>{{ subject.name }}</td>
+                    <td><span class="badge bg-purple-soft text-purple">{{ subject.code }}</span></td>
+                    <td>Semester {{ subject.semester_id }}</td>
+                    <td>{{ assignment.created_at.strftime('%d %b, %Y') }}</td>
+                    <td>
+                        {% if assignment.created_at > now.replace(hour=0, minute=0, second=0) %}
+                            <span class="badge-ai">AI</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Manual</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('hod.remove_assignment', assignment_id=assignment.id) }}" 
+                           class="btn-remove"
+                           onclick="return confirm('Are you sure you want to remove this assignment?')">
+                            <i class="fas fa-trash-alt me-1"></i>Remove
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">No assignments found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confirm AI assignment
+function confirmAI() {
+    return confirm('AI will automatically assign teachers to subjects based on:\n' +
+                  '• Equal workload distribution\n' +
+                  '• Round-robin allocation\n\n' +
+                  'Do you want to proceed?');
+}
+
+// Load assignment statistics
+function loadStats() {
+    $.get('/hod/assignment-stats', function(data) {
+        $('#assignedCount').text(data.assigned_subjects || 0);
+        $('#avgWorkload').text(data.average_workload || 0);
+        
+        // Update stats card with workload info
+        if (data.teacher_workload) {
+            let workloadHtml = '<div class="mt-2">';
+            for (let [teacher, count] of Object.entries(data.teacher_workload)) {
+                let percentage = (count / (data.max_capacity || 10) * 100);
+                workloadHtml += `
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small">
+                            <span>${teacher}</span>
+                            <span>${count}/${data.max_capacity || 10} subjects</span>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-purple" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            workloadHtml += '</div>';
+            
+            $('#avgWorkload').attr('data-bs-toggle', 'tooltip');
+            $('#avgWorkload').attr('title', workloadHtml);
+            
+            // Initialize tooltip
+            try {
+                new bootstrap.Tooltip(document.getElementById('avgWorkload'));
+            } catch(e) {
+                console.log('Tooltip error:', e);
+            }
+        }
+    }).fail(function(xhr) {
+        console.error('Failed to load stats:', xhr.responseText);
+    });
+}
+
+// Load stats on page load and every 10 seconds
+$(document).ready(function() {
+    loadStats();
+    setInterval(loadStats, 10000);
+});
+</script>
+{% endblock %}

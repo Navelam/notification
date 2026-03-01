@@ -1,0 +1,596 @@
+{% extends "principal/base_principal.html" %}
+
+{% block title %}Notifications - Principal{% endblock %}
+
+{% block header_title %}College Notifications{% endblock %}
+{% block header_subtitle %}Centralized notification management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .command-center {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .command-center::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 60%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    
+    .command-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    
+    .command-stat {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 15px;
+        backdrop-filter: blur(5px);
+    }
+    
+    .command-stat .number {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    
+    .command-stat .label {
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+    
+    .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .overview-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.02);
+        border: 1px solid #e9ecef;
+    }
+    
+    .overview-card h6 {
+        color: #6f42c1;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f3e9ff;
+    }
+    
+    .department-badge {
+        background: #f3e9ff;
+        padding: 4px 10px;
+        border-radius: 15px;
+        color: #6f42c1;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+    
+    .priority-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    
+    .priority-high { background: #dc3545; box-shadow: 0 0 10px #dc3545; }
+    .priority-medium { background: #ffc107; }
+    .priority-low { background: #28a745; }
+    
+    .notification-card {
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .notification-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(111,66,193,0.15);
+        border-color: #6f42c1;
+    }
+    
+    .notification-header {
+        padding: 15px 20px;
+        cursor: pointer;
+    }
+    
+    .notification-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .notification-content {
+        padding: 0 20px 15px 20px;
+    }
+    
+    .dept-tag {
+        background: #f3e9ff;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        color: #6f42c1;
+    }
+    
+    .btn-primary-action {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(111,66,193,0.4);
+        color: white;
+    }
+    
+    .timeline-item {
+        display: flex;
+        gap: 15px;
+        padding: 15px;
+        border-left: 2px solid #6f42c1;
+        margin-left: 20px;
+        position: relative;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -7px;
+        top: 20px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #6f42c1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Command Center -->
+<div class="command-center">
+    <h4><i class="fas fa-crown me-2"></i>Principal's Command Center</h4>
+    <p>Centralized notification management for all departments</p>
+    
+    <div class="command-stats">
+        <div class="command-stat">
+            <div class="number" id="totalCollege">0</div>
+            <div class="label">Total College-wide</div>
+        </div>
+        <div class="command-stat">
+            <div class="number" id="urgentCollege">0</div>
+            <div class="label">Urgent</div>
+        </div>
+        <div class="command-stat">
+            <div class="number" id="deptActive">0</div>
+            <div class="label">Active Departments</div>
+        </div>
+        <div class="command-stat">
+            <div class="number" id="pendingReview">0</div>
+            <div class="label">Pending Review</div>
+        </div>
+    </div>
+</div>
+
+<!-- Overview Grid -->
+<div class="overview-grid">
+    <div class="overview-card">
+        <h6><i class="fas fa-building me-2"></i>Department Activity</h6>
+        <div id="deptActivity">
+            <div class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-purple"></div>
+                <p class="small mt-2 text-muted">Loading...</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="overview-card">
+        <h6><i class="fas fa-exclamation-triangle me-2"></i>Critical Alerts</h6>
+        <div id="criticalAlerts">
+            <div class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-purple"></div>
+                <p class="small mt-2 text-muted">Loading...</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="overview-card">
+        <h6><i class="fas fa-clock me-2"></i>Recent Activity</h6>
+        <div id="recentActivity">
+            <div class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-purple"></div>
+                <p class="small mt-2 text-muted">Loading...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Actions -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <button class="btn btn-purple me-2" onclick="window.location.href='{{ url_for('coordinator.notifications_dashboard') }}'">
+            <i class="fas fa-plus-circle me-2"></i>Create Notification
+        </button>
+        <button class="btn btn-outline-purple" onclick="exportReport()">
+            <i class="fas fa-download me-2"></i>Export Report
+        </button>
+    </div>
+    <div>
+        <button class="btn btn-outline-purple me-2" onclick="markAllAsRead()">
+            <i class="fas fa-check-double me-1"></i>Mark All Read
+        </button>
+        <button class="btn btn-outline-purple" onclick="refreshDashboard()">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Notifications Table -->
+<div class="card">
+    <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="fas fa-list me-2"></i>All College Notifications</h6>
+        <div>
+            <select class="form-select form-select-sm bg-light text-dark" id="deptFilter" style="width: auto; display: inline-block;">
+                <option value="all">All Departments</option>
+                <option value="CS">Computer Science</option>
+                <option value="CA">Computer Applications</option>
+                <option value="CF">Commerce Finance</option>
+                <option value="CC">Commerce Co-op</option>
+                <option value="EN">English</option>
+                <option value="EC">Economics</option>
+                <option value="HY">History</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="notificationsTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Priority</th>
+                        <th>Type</th>
+                        <th>Title/Message</th>
+                        <th>Department</th>
+                        <th>Target</th>
+                        <th>Posted</th>
+                        <th>Valid Until</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="notificationTableBody">
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="spinner-border text-purple"></div>
+                            <p class="mt-2 text-muted">Loading notifications...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+let allNotifications = [];
+let deptData = {};
+
+$(document).ready(function() {
+    loadPrincipalDashboard();
+    
+    $('#deptFilter').on('change', function() {
+        filterByDepartment($(this).val());
+    });
+    
+    // Auto-refresh every 2 minutes
+    setInterval(loadPrincipalDashboard, 120000);
+});
+
+function loadPrincipalDashboard() {
+    loadAllNotifications();
+    loadDepartmentActivity();
+    loadCriticalAlerts();
+    loadRecentActivity();
+}
+
+function loadAllNotifications() {
+    $.ajax({
+        url: '/api/notifications/list',
+        method: 'GET',
+        success: function(data) {
+            if (data.success && data.notifications) {
+                allNotifications = data.notifications;
+                updateCommandStats();
+                displayNotificationsTable(allNotifications);
+            }
+        },
+        error: function() {
+            showError('Failed to load notifications');
+        }
+    });
+}
+
+function updateCommandStats() {
+    let total = allNotifications.length;
+    let urgent = allNotifications.filter(n => n.type === 'emergency').length;
+    let pendingReview = allNotifications.filter(n => !n.is_read).length;
+    
+    // Count active departments (simplified)
+    let depts = new Set();
+    allNotifications.forEach(n => {
+        if (n.department) depts.add(n.department);
+    });
+    
+    $('#totalCollege').text(total);
+    $('#urgentCollege').text(urgent);
+    $('#deptActive').text(depts.size || '7');
+    $('#pendingReview').text(pendingReview);
+}
+
+function displayNotificationsTable(notifications) {
+    if (notifications.length === 0) {
+        $('#notificationTableBody').html(`
+            <tr>
+                <td colspan="9" class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <h6>No Notifications Found</h6>
+                </td>
+            </tr>
+        `);
+        return;
+    }
+    
+    let html = '';
+    notifications.slice(0, 20).forEach(function(notif) {
+        let priority = getPriority(notif);
+        let priorityClass = priority === 'High' ? 'priority-high' : 
+                          priority === 'Medium' ? 'priority-medium' : 'priority-low';
+        let statusBadge = notif.is_read ? 
+            '<span class="badge bg-secondary">Read</span>' : 
+            '<span class="badge bg-danger">New</span>';
+        
+        html += `
+            <tr>
+                <td>
+                    <span class="priority-indicator ${priorityClass}"></span>
+                    ${priority}
+                </td>
+                <td>
+                    <span class="badge bg-${getTypeColor(notif.type)}">${notif.type || 'General'}</span>
+                </td>
+                <td>
+                    <strong>${escapeHtml(notif.title)}</strong>
+                    <br>
+                    <small class="text-muted">${escapeHtml(truncateText(notif.message, 80))}</small>
+                </td>
+                <td>
+                    <span class="department-badge">${notif.department || 'All'}</span>
+                </td>
+                <td>
+                    <span class="badge bg-info">${notif.target_role || 'All'}</span>
+                </td>
+                <td>
+                    <small><i class="far fa-clock me-1"></i>${notif.time_ago}</small>
+                </td>
+                <td>
+                    <small>${notif.end_date || 'N/A'}</small>
+                </td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-purple" onclick="viewNotification(${notif.id})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification(${notif.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    $('#notificationTableBody').html(html);
+}
+
+function loadDepartmentActivity() {
+    // Simulate department activity data
+    let html = '';
+    let depts = ['Computer Science', 'Computer Applications', 'Commerce Finance', 'Commerce Co-op', 'English', 'Economics', 'History'];
+    
+    depts.forEach(dept => {
+        let count = Math.floor(Math.random() * 10) + 1;
+        html += `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>${dept}</span>
+                <span class="badge bg-purple">${count} notifications</span>
+            </div>
+        `;
+    });
+    
+    $('#deptActivity').html(html);
+}
+
+function loadCriticalAlerts() {
+    let critical = allNotifications.filter(n => n.type === 'emergency' || n.type === 'exam');
+    
+    if (critical.length === 0) {
+        $('#criticalAlerts').html('<p class="text-muted text-center py-3">No critical alerts</p>');
+        return;
+    }
+    
+    let html = '';
+    critical.slice(0, 5).forEach(alert => {
+        html += `
+            <div class="alert alert-warning py-2 mb-2">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>${escapeHtml(alert.title)}</strong>
+                <br>
+                <small>${alert.time_ago}</small>
+            </div>
+        `;
+    });
+    
+    $('#criticalAlerts').html(html);
+}
+
+function loadRecentActivity() {
+    let recent = allNotifications.sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+    ).slice(0, 5);
+    
+    if (recent.length === 0) {
+        $('#recentActivity').html('<p class="text-muted text-center py-3">No recent activity</p>');
+        return;
+    }
+    
+    let html = '';
+    recent.forEach(activity => {
+        html += `
+            <div class="timeline-item">
+                <div>
+                    <strong>${escapeHtml(activity.title)}</strong>
+                    <br>
+                    <small class="text-muted">${activity.time_ago}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#recentActivity').html(html);
+}
+
+function filterByDepartment(dept) {
+    if (dept === 'all') {
+        displayNotificationsTable(allNotifications);
+    } else {
+        let filtered = allNotifications.filter(n => n.department === dept);
+        displayNotificationsTable(filtered);
+    }
+}
+
+function getPriority(notification) {
+    if (notification.type === 'emergency') return 'High';
+    if (notification.type === 'exam' || notification.type === 'meeting') return 'Medium';
+    return 'Low';
+}
+
+function getTypeColor(type) {
+    const colors = {
+        'fee': 'danger',
+        'meeting': 'warning',
+        'event': 'purple',
+        'result': 'success',
+        'timetable': 'info',
+        'emergency': 'danger',
+        'general': 'secondary'
+    };
+    return colors[type] || 'primary';
+}
+
+function viewNotification(id) {
+    let notif = allNotifications.find(n => n.id == id);
+    if (notif) {
+        alert(`Title: ${notif.title}\n\nMessage: ${notif.message}`);
+    }
+}
+
+function deleteNotification(id) {
+    if (confirm('Are you sure you want to delete this notification?')) {
+        $.post(`/coordinator/delete-notification/${id}`, function(data) {
+            loadPrincipalDashboard();
+            showToast('Notification deleted', 'success');
+        });
+    }
+}
+
+function markAllAsRead() {
+    $.post('/api/notifications/mark-all-read', function(data) {
+        if (data.success) {
+            allNotifications.forEach(n => n.is_read = true);
+            displayNotificationsTable(allNotifications);
+            showToast('All marked as read', 'success');
+        }
+    });
+}
+
+function exportReport() {
+    window.location.href = '/principal/export/notification-report';
+}
+
+function refreshDashboard() {
+    loadPrincipalDashboard();
+}
+
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+    }
+    return text;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToast(message, type) {
+    const toast = $(`
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+            <div class="toast align-items-center text-white bg-${type} border-0 show" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    setTimeout(() => toast.fadeOut().remove(), 3000);
+}
+
+function showError(message) {
+    $('#notificationTableBody').html(`
+        <tr>
+            <td colspan="9" class="text-center py-5 text-danger">
+                <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                <h6>${message}</h6>
+                <button class="btn btn-sm btn-purple mt-2" onclick="loadPrincipalDashboard()">
+                    <i class="fas fa-sync-alt me-2"></i>Retry
+                </button>
+            </td>
+        </tr>
+    `);
+}
+</script>
+{% endblock %}

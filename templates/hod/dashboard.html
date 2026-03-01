@@ -1,0 +1,423 @@
+{% extends "hod/base_hod.html" %}
+
+{% block title %}HOD Dashboard - SPAS{% endblock %}
+
+{% block header_title %}Dashboard{% endblock %}
+{% block header_subtitle %}Overview of your department{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(111, 66, 193, 0.1);
+        border-color: #6f42c1;
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f3e9ff, #ffffff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #6f42c1;
+    }
+    
+    .stat-content h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+        line-height: 1.2;
+    }
+    
+    .stat-content p {
+        color: #6c757d;
+        margin: 5px 0 0;
+        font-size: 0.9rem;
+    }
+    
+    .charts-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
+        border: 1px solid #e9ecef;
+    }
+    
+    .chart-card h5 {
+        color: #6f42c1;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f3e9ff;
+        font-size: 1.1rem;
+    }
+    
+    .chart-container {
+        height: 300px;
+        position: relative;
+    }
+    
+    .recent-section {
+        margin-top: 30px;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .section-header h5 {
+        color: #6f42c1;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .section-header a {
+        color: #6f42c1;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    
+    .section-header a:hover {
+        text-decoration: underline;
+    }
+    
+    .table {
+        margin: 0;
+    }
+    
+    .table thead th {
+        background: #f3e9ff;
+        color: #6f42c1;
+        font-weight: 600;
+        border-bottom: 2px solid #6f42c1;
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+    
+    .table tbody td {
+        padding: 12px;
+        vertical-align: middle;
+    }
+    
+    .badge-risk {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .badge-critical {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .badge-high {
+        background: #fd7e14;
+        color: white;
+    }
+    
+    .badge-average {
+        background: #ffc107;
+        color: #2c3e50;
+    }
+    
+    .badge-safe {
+        background: #28a745;
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .charts-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Add this after the statistics cards or before the charts -->
+<!-- Notifications Section -->
+<div class="recent-section mb-4">
+    <div class="section-header">
+        <h5><i class="fas fa-bell me-2"></i>Important Notifications</h5>
+        <a href="{{ url_for('auth.notifications') }}">View All <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Message</th>
+                    <th>Received</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+               
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ total_teachers }}</h3>
+            <p>Total Teachers</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ total_students }}</h3>
+            <p>Total Students</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-book"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ total_subjects }}</h3>
+            <p>Total Subjects</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+            <h3 id="riskCount">0</h3>
+            <p>At Risk Students</p>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="charts-row">
+    <div class="chart-card">
+        <h5><i class="fas fa-chart-bar me-2"></i>Subject-wise Average Marks</h5>
+        <div class="chart-container">
+            <canvas id="subjectChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="chart-card">
+        <h5><i class="fas fa-pie-chart me-2"></i>Risk Level Distribution</h5>
+        <div class="chart-container">
+            <canvas id="riskChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Teacher Assignments -->
+<div class="recent-section">
+    <div class="section-header">
+        <h5><i class="fas fa-user-plus me-2"></i>Recent Teacher Assignments</h5>
+        <a href="{{ url_for('hod.assign_teachers') }}">View All <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Teacher</th>
+                    <th>Subject</th>
+                    <th>Semester</th>
+                    <th>Assigned On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment, teacher, subject in teacher_assignments %}
+                <tr>
+                    <td>
+                        <i class="fas fa-user-circle text-purple me-2"></i>
+                        {{ teacher.full_name }}
+                    </td>
+                    <td>{{ subject.name }}</td>
+                    <td>Semester {{ subject.semester_id }}</td>
+                    <td>{{ assignment.created_at.strftime('%d %b, %Y') }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No teacher assignments found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Student Performances -->
+<div class="recent-section mt-4">
+    <div class="section-header">
+        <h5><i class="fas fa-chart-line me-2"></i>Recent Student Performances</h5>
+        <a href="{{ url_for('hod.student_performance') }}">View All <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Subject</th>
+                    <th>Marks</th>
+                    <th>Attendance</th>
+                    <th>Risk Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for performance, student, subject in recent_performances %}
+                <tr>
+                    <td>
+                        <i class="fas fa-user-graduate text-purple me-2"></i>
+                        {{ student.name }}
+                    </td>
+                    <td>{{ subject.name }}</td>
+                    <td>{{ performance.final_internal }}/25</td>
+                    <td>{{ performance.attendance }}%</td>
+                    <td>
+                        <span class="badge-risk 
+                            {% if performance.risk_status == 'Critical' %}badge-critical
+                            {% elif performance.risk_status == 'High Risk' %}badge-high
+                            {% elif performance.risk_status == 'Average' %}badge-average
+                            {% else %}badge-safe{% endif %}">
+                            {{ performance.risk_status }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No performance records found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Fetch chart data
+    $.get('/hod/api/chart-data', function(data) {
+        // Subject-wise average chart
+        const ctx1 = document.getElementById('subjectChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: data.subject_names,
+                datasets: [{
+                    label: 'Average Marks (out of 25)',
+                    data: data.subject_avg,
+                    backgroundColor: '#6f42c1',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 25,
+                        grid: {
+                            display: true,
+                            color: '#e9ecef'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Risk distribution chart
+        const ctx2 = document.getElementById('riskChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: data.risk_labels,
+                datasets: [{
+                    data: data.risk_data,
+                    backgroundColor: [
+                        '#dc3545',  // Critical
+                        '#fd7e14',  // High Risk
+                        '#ffc107',  // Average
+                        '#28a745'   // Safe
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+        
+        // Update risk count
+        const totalRisk = data.risk_data[0] + data.risk_data[1];
+        $('#riskCount').text(totalRisk);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,545 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Student Performance Analysis System | SPAS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        padding: 40px 0 20px;
+        text-align: center;
+    }
+    
+    .college-badge {
+        display: inline-block;
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 5px 15px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .system-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+    
+    .system-title span {
+        color: #6f42c1;
+        position: relative;
+    }
+    
+    .system-title span::after {
+        content: '';
+        position: absolute;
+        bottom: 5px;
+        left: 0;
+        width: 100%;
+        height: 8px;
+        background: rgba(111, 66, 193, 0.2);
+        z-index: -1;
+    }
+    
+    .college-name {
+        color: #6c757d;
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+    }
+    
+    /* Role Cards Section */
+    .role-section {
+        padding: 40px 0;
+        background: white;
+    }
+    
+    .section-title {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .section-title h2 {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .section-title h2 span {
+        color: #6f42c1;
+    }
+    
+    .role-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .role-card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px 15px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .role-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(111, 66, 193, 0.15);
+        border-color: #6f42c1;
+    }
+    
+    .role-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: #f3e9ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        font-size: 28px;
+        color: #6f42c1;
+        transition: all 0.3s;
+    }
+    
+    .role-card:hover .role-icon {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        transform: scale(1.05);
+    }
+    
+    .role-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 15px;
+    }
+    
+    .role-btn {
+        background: transparent;
+        color: #6f42c1;
+        border: 2px solid #6f42c1;
+        padding: 6px 20px;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        min-width: 80px;
+    }
+    
+    .role-btn:hover {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border-color: transparent;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.3);
+    }
+    
+    /* Public Info Section */
+    .public-section {
+        padding: 40px 0 60px;
+        background: #f8fafc;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px 15px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(111, 66, 193, 0.1);
+        border-color: #6f42c1;
+    }
+    
+    .info-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #f3e9ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 24px;
+        color: #6f42c1;
+        transition: all 0.3s;
+    }
+    
+    .info-card:hover .info-icon {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+    }
+    
+    .info-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    .info-card:hover .info-title {
+        color: #6f42c1;
+    }
+    
+    /* Announcements Section */
+    .announcements-section {
+        padding: 40px 0;
+        background: #f8f9fa;
+    }
+    
+    .bg-purple-soft {
+        background: #f3e9ff;
+    }
+    
+    .text-purple {
+        color: #6f42c1;
+    }
+    
+    .hover-shadow {
+        transition: all 0.3s;
+    }
+    
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(111, 66, 193, 0.15) !important;
+    }
+    
+    /* Back to Home Link */
+    .back-home {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .back-home a {
+        color: #6f42c1;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .back-home a:hover {
+        color: #5a32a3;
+        text-decoration: underline;
+    }
+    
+    /* Footer */
+    .footer {
+        background: white;
+        border-top: 1px solid #e9ecef;
+        padding: 20px 0;
+        text-align: center;
+    }
+    
+    .footer-content {
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .role-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 0 15px;
+        }
+        
+        .info-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 0 15px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .system-title {
+            font-size: 2rem;
+        }
+        
+        .role-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .system-title {
+            font-size: 1.6rem;
+        }
+        
+        .role-grid {
+            grid-template-columns: 1fr;
+            max-width: 280px;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+            max-width: 280px;
+        }
+        
+        .section-title h2 {
+            font-size: 1.6rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="college-badge">
+            <i class="fas fa-university me-1"></i> PK DAS LIBERAL COLLEGE OF ARTS AND SCIENCE
+        </div>
+        <h1 class="system-title">
+            <span>Student Performance</span> Analysis System
+        </h1>
+        <p class="college-name">
+            <i class="fas fa-map-pin me-1"></i> Affiliated to University of Calicut
+        </p>
+    </div>
+</section>
+
+<!-- Role Cards Section -->
+<section class="role-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Select Your <span>Role</span></h2>
+        </div>
+        
+        <div class="role-grid">
+            <!-- Student Card -->
+            <div class="role-card">
+                <div class="role-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h3 class="role-title">Student</h3>
+                <a href="{{ url_for('auth.login') }}?role=student" class="role-btn">Open</a>
+            </div>
+            
+            <!-- Teacher Card -->
+            <div class="role-card">
+                <div class="role-icon">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <h3 class="role-title">Teacher</h3>
+                <a href="{{ url_for('auth.login') }}?role=teacher" class="role-btn">Open</a>
+            </div>
+            
+            <!-- HOD Card -->
+            <div class="role-card">
+                <div class="role-icon">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <h3 class="role-title">HOD</h3>
+                <a href="{{ url_for('auth.login') }}?role=hod" class="role-btn">Open</a>
+            </div>
+            
+            <!-- Coordinator Card -->
+            <div class="role-card">
+                <div class="role-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3 class="role-title">Coordinator</h3>
+                <a href="{{ url_for('auth.login') }}?role=coordinator" class="role-btn">Open</a>
+            </div>
+            
+            <!-- Principal Card -->
+            <div class="role-card">
+                <div class="role-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <h3 class="role-title">Principal</h3>
+                <a href="{{ url_for('auth.login') }}?role=principal" class="role-btn">Open</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Public Information Section -->
+<section class="public-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Public <span>Information</span></h2>
+        </div>
+        
+        <div class="info-grid">
+            <!-- Exam Timetable -->
+            <a href="{{ url_for('public.exam_timetable') }}" class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h4 class="info-title">Exam Timetable</h4>
+            </a>
+            
+            <!-- Room Allocation -->
+            <a href="{{ url_for('public.room_allocation') }}" class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <h4 class="info-title">Room Allocation</h4>
+            </a>
+            
+            <!-- Invigilator -->
+            <a href="{{ url_for('public.invigilator') }}" class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h4 class="info-title">Invigilator</h4>
+            </a>
+            
+            <!-- Notifications -->
+            <a href="{{ url_for('public.notifications') }}" class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <h4 class="info-title">Notifications</h4>
+            </a>
+        </div>
+    </div>
+</section>
+
+
+<!-- Back to Home Link -->
+<div class="back-home">
+    <a href="{{ url_for('home') }}">
+        <i class="fas fa-arrow-left me-2"></i>Back to Home Page
+    </a>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load announcements on page load
+$(document).ready(function() {
+    loadAnnouncements();
+});
+
+function loadAnnouncements() {
+    $.ajax({
+        url: '/api/notifications/list',
+        method: 'GET',
+        success: function(data) {
+            if (data.success && data.notifications && data.notifications.length > 0) {
+                displayAnnouncements(data.notifications);
+            } else {
+                showNoAnnouncements();
+            }
+        },
+        error: function() {
+            showNoAnnouncements();
+        }
+    });
+}
+
+function displayAnnouncements(notifications) {
+    let html = '';
+    let publicNotifs = notifications.filter(n => n.target_role === 'public' || n.target_role === 'all');
+    
+    if (publicNotifs.length === 0) {
+        showNoAnnouncements();
+        return;
+    }
+    
+    publicNotifs.slice(0, 6).forEach(function(notif) {
+        let color = getColor(notif.type);
+        html += `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm hover-shadow">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 50px; height: 50px; background: ${color}20;">
+                                <i class="fas ${notif.icon || 'fa-bullhorn'}" style="color: ${color}; font-size: 1.3rem;"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">${notif.title || 'Announcement'}</h6>
+                                <small class="text-muted">${notif.time_ago || 'Just now'}</small>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-3">${truncateText(notif.message || '', 100)}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-purple">
+                                <i class="far fa-bell me-1"></i>
+                                Click to read more
+                            </small>
+                            <button class="btn btn-sm btn-outline-purple" onclick="alert('${notif.message}')">
+                                Read More
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#announcements-container').html(html);
+}
+
+function showNoAnnouncements() {
+    $('#announcements-container').html(`
+        <div class="col-12 text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-bell-slash fa-4x text-muted"></i>
+            </div>
+            <h5 class="text-muted">No Announcements Available</h5>
+            <p class="text-muted">Check back later for college updates</p>
+        </div>
+    `);
+}
+
+function getColor(type) {
+    const colors = {
+        'fee': '#dc3545',
+        'meeting': '#fd7e14',
+        'event': '#6f42c1',
+        'result': '#28a745',
+        'timetable': '#17a2b8',
+        'holiday': '#20c997',
+        'emergency': '#dc3545',
+        'general': '#6f42c1'
+    };
+    return colors[type] || '#6f42c1';
+}
+
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+    }
+    return text;
+}
+</script>
+{% endblock %}

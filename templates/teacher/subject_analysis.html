@@ -1,0 +1,298 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}Subject Analysis - {{ subject_code }}{% endblock %}
+
+{% block header_title %}Subject Analysis{% endblock %}
+{% block header_subtitle %}{{ subject_code }} - Semester {{ semester }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(111,66,193,0.1);
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #6f42c1;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+    
+    .chart-container {
+        margin: 30px 0;
+        height: 300px;
+    }
+    
+    .student-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .student-table thead th {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 12px;
+        font-weight: 600;
+    }
+    
+    .student-table tbody td {
+        padding: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .grade-badge {
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .grade-aplus { background: #6f42c1; color: white; }
+    .grade-a { background: #9b59b6; color: white; }
+    .grade-b { background: #3498db; color: white; }
+    .grade-c { background: #f1c40f; color: #2c3e50; }
+    .grade-d { background: #e74c3c; color: white; }
+    
+    .risk-badge {
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .risk-critical { background: #dc3545; color: white; }
+    .risk-average { background: #ffc107; color: #2c3e50; }
+    .risk-safe { background: #28a745; color: white; }
+    .risk-best { background: #6f42c1; color: white; }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn-action {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(111,66,193,0.3);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.avg_marks }}</div>
+        <div class="stat-label">Average Marks</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.avg_attendance }}%</div>
+        <div class="stat-label">Avg Attendance</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.pass_percentage }}%</div>
+        <div class="stat-label">Pass Rate</div>
+    </div>
+</div>
+
+<!-- Risk Distribution -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <h5 class="text-danger">{{ stats.critical_count }}</h5>
+                <small>Critical</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <h5 class="text-warning">{{ stats.average_count }}</h5>
+                <small>Average</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <h5 class="text-success">{{ stats.safe_count }}</h5>
+                <small>Safe</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-purple">
+            <div class="card-body text-center">
+                <h5 class="text-purple">{{ stats.best_count }}</h5>
+                <small>Best</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Marks Distribution Chart -->
+<div class="card mb-4">
+    <div class="card-header bg-purple text-white">
+        <h5 class="mb-0">Marks Distribution</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="marksChart" height="100"></canvas>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="action-buttons">
+    <a href="{{ url_for('teacher.enter_marks', subject_code=subject_code, semester=semester) }}" 
+       class="btn-action">
+        <i class="fas fa-pencil-alt"></i> Enter Marks
+    </a>
+    <a href="{{ url_for('teacher.export_subject', subject_code=subject_code, semester=semester) }}" 
+       class="btn-action" style="background: #28a745;">
+        <i class="fas fa-download"></i> Export CSV
+    </a>
+</div>
+
+<!-- Student List -->
+<div class="card mt-4">
+    <div class="card-header bg-purple text-white">
+        <h5 class="mb-0">Student List</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="student-table datatable">
+                <thead>
+                    <tr>
+                        <th>Registration</th>
+                        <th>Name</th>
+                        <th>Internal 1</th>
+                        <th>Internal 2</th>
+                        <th>Seminar</th>
+                        <th>Assessment</th>
+                        <th>Final/20</th>
+                        <th>Attendance</th>
+                        <th>Grade</th>
+                        <th>Risk</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    {% set total = student.internal1 + student.internal2 + student.seminar + student.assessment %}
+                    {% set final = (total / 160 * 20)|round(1) %}
+                    {% set grade = calculate_grade(final) %}
+                    {% set risk = calculate_risk(student.attendance, final) %}
+                    <tr>
+                        <td>{{ student.registration }}</td>
+                        <td>{{ student.name }}</td>
+                        <td>{{ student.internal1 }}</td>
+                        <td>{{ student.internal2 }}</td>
+                        <td>{{ student.seminar }}</td>
+                        <td>{{ student.assessment }}</td>
+                        <td><strong>{{ final }}</strong></td>
+                        <td>{{ student.attendance }}%</td>
+                        <td>
+                            <span class="grade-badge grade-{{ grade|lower }}">
+                                {{ grade }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="risk-badge risk-{{ risk|lower }}">
+                                {{ risk }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center">No students found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// Parse marks data from JSON
+const marksData = {{ marks_data|safe }};
+
+// Create marks distribution chart
+const ctx = document.getElementById('marksChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: marksData.map(d => d.name),
+        datasets: [{
+            label: 'Final Marks /20',
+            data: marksData.map(d => d.marks),
+            backgroundColor: marksData.map(d => {
+                if (d.marks >= 18) return '#6f42c1';
+                if (d.marks >= 15) return '#9b59b6';
+                if (d.marks >= 12) return '#3498db';
+                if (d.marks >= 10) return '#f1c40f';
+                return '#e74c3c';
+            }),
+            borderRadius: 5
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 20,
+                grid: {
+                    color: '#e9ecef'
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

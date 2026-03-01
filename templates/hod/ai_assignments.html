@@ -1,0 +1,86 @@
+{% extends "hod/base_hod.html" %}
+
+{% block title %}AI Assignments - SPAS{% endblock %}
+
+{% block header_title %}AI Teacher Assignments{% endblock %}
+{% block header_subtitle %}View AI-generated assignments{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-robot me-2"></i>AI Assignment Rules</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>Expertise Matching:</strong> Teachers assigned based on subject expertise
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>Equal Workload:</strong> Maximum 5 subjects per teacher
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>No Duplicates:</strong> Each subject assigned to one teacher
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>Backup Teachers:</strong> Available for overload situations
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>Past Experience:</strong> Preference given to experienced teachers
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-purple text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Workload Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="workloadChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $.get('/hod/assignment-stats', function(data) {
+        const ctx = document.getElementById('workloadChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data.teacher_workload),
+                datasets: [{
+                    label: 'Subjects Assigned',
+                    data: Object.values(data.teacher_workload),
+                    backgroundColor: '#6f42c1',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 5,
+                        stepSize: 1
+                    }
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

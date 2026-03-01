@@ -1,0 +1,399 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}Teacher Dashboard - SPAS{% endblock %}
+
+{% block header_title %}Dashboard{% endblock %}
+{% block header_subtitle %}Overview of your subjects and students{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(111, 66, 193, 0.1);
+        border-color: #6f42c1;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #f3e9ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: #6f42c1;
+    }
+    
+    .stat-content h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    .stat-content p {
+        color: #6c757d;
+        margin: 5px 0 0;
+    }
+    
+    .subject-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .subject-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(111, 66, 193, 0.1);
+        border-color: #6f42c1;
+    }
+    
+    .subject-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .subject-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #6f42c1;
+    }
+    
+    .subject-code {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+    }
+    
+    .btn-enter-marks {
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-enter-marks:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.3);
+        color: white;
+    }
+    
+    .performance-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .performance-table thead th {
+        background: #f3e9ff;
+        color: #6f42c1;
+        padding: 15px;
+        font-weight: 600;
+    }
+    
+    .performance-table tbody td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e9ecef;
+        text-align: center;
+    }
+    
+    .performance-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .grade-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .grade-aplus { background: #6f42c1; color: white; }
+    .grade-a { background: #9b59b6; color: white; }
+    .grade-b { background: #3498db; color: white; }
+    .grade-c { background: #f1c40f; color: #2c3e50; }
+    .grade-d { background: #e74c3c; color: white; }
+    
+    .risk-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .risk-critical { background: #dc3545; color: white; }
+    .risk-average { background: #ffc107; color: #2c3e50; }
+    .risk-safe { background: #28a745; color: white; }
+    .risk-best { background: #6f42c1; color: white; }
+    
+    .btn-edit {
+        background: transparent;
+        border: 2px solid #6f42c1;
+        color: #6f42c1;
+        padding: 5px 12px;
+        border-radius: 6px;
+        transition: all 0.3s;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    
+    .btn-edit:hover {
+        background: #6f42c1;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ total_students }}</h3>
+            <p>Total Students</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-book"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ subjects|length }}</h3>
+            <p>Assigned Subjects</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ critical_count }}</h3>
+            <p>Critical Risk</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-star"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ best_count }}</h3>
+            <p>Best Performers</p>
+        </div>
+    </div>
+</div>
+
+<!-- Assigned Subjects -->
+<h5 class="mb-3"><i class="fas fa-book me-2 text-purple"></i>Your Subjects</h5>
+
+<div class="row mb-4">
+    {% for subject in subjects %}
+    <div class="col-md-4">
+        <div class="subject-card">
+            <div class="subject-header">
+                <span class="subject-name">{{ subject.name }}</span>
+                <span class="subject-code">{{ subject.code }}</span>
+            </div>
+            <p class="text-muted mb-2">Semester {{ subject.semester }}</p>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('teacher.student_results', subject_id=subject.id) }}" class="btn-enter-marks" style="background: #6f42c1;">
+    <i class="fas fa-list me-2"></i>Results
+</a>
+<a href="{{ url_for('teacher.enter_marks', subject_id=subject.id) }}" class="btn-enter-marks" style="background: #28a745;">
+    <i class="fas fa-edit me-2"></i>Enter Marks
+</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+</div>
+<!-- Recent Question Papers -->
+{% if recent_papers %}
+<div class="card mb-4">
+    <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-file-pdf me-2"></i>Recent Question Papers</h5>
+        <a href="{{ url_for('teacher.question_papers') }}" class="btn btn-sm btn-light">View All</a>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for paper in recent_papers %}
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border-purple">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas {{ paper.get_file_icon() }} fa-2x text-purple me-2"></i>
+                            <h6 class="card-title mb-0">{{ paper.title|truncate(30) }}</h6>
+                        </div>
+                        <p class="small text-muted mb-1">
+                            <i class="fas fa-book me-1"></i> {{ paper.subject.name }}
+                        </p>
+                        <p class="small text-muted mb-2">
+                            <i class="fas fa-tag me-1"></i> {{ paper.exam_type|replace('_', ' ')|title }}
+                        </p>
+                        <a href="{{ url_for('teacher.download_question_paper', paper_id=paper.id) }}" 
+                           class="btn btn-sm btn-outline-purple w-100">
+                            <i class="fas fa-download me-1"></i> Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+<!-- Performance Table -->
+<h5 class="mb-3"><i class="fas fa-chart-line me-2 text-purple"></i>Student Performance</h5>
+
+<div class="table-responsive">
+    <table class="performance-table datatable">
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Reg No</th>
+                <th>Attendance %</th>
+                <th>Final/20</th>
+                <th>Marks %</th>
+                <th>Grade</th>
+                <th>Risk</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for perf in performances %}
+            <tr>
+                <td><span class="badge bg-purple-soft text-purple">{{ perf.student.student_id }}</span></td>
+                <td>{{ perf.student.name }}</td>
+                <td>{{ perf.student.registration_number }}</td>
+                <td>
+                    {{ perf.attendance_percentage }}%
+                    {% if perf.attendance_percentage < 70 %}
+                        <i class="fas fa-exclamation-circle text-danger ms-1"></i>
+                    {% endif %}
+                </td>
+                <td><strong>{{ perf.final_marks }}</strong></td>
+                <td>{{ perf.percentage }}%</td>
+                <td>
+                    <span class="grade-badge 
+                        {% if perf.grade == 'A+' %}grade-aplus
+                        {% elif perf.grade == 'A' %}grade-a
+                        {% elif perf.grade == 'B' %}grade-b
+                        {% elif perf.grade == 'C' %}grade-c
+                        {% else %}grade-d{% endif %}">
+                        {{ perf.grade }}
+                    </span>
+                </td>
+                <td>
+                    <span class="risk-badge 
+                        {% if perf.risk_status == 'Critical' %}risk-critical
+                        {% elif perf.risk_status == 'Average' %}risk-average
+                        {% elif perf.risk_status == 'Safe' %}risk-safe
+                        {% else %}risk-best{% endif %}">
+                        {{ perf.risk_status }}
+                    </span>
+                </td>
+                <td>
+    <a href="{{ url_for('teacher.enter_marks', subject_id=perf.subject_id) }}?student_id={{ perf.student.id }}" class="btn-edit">
+Edit
+    </a>
+</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="text-center text-muted py-4">
+                    <i class="fas fa-chart-line fa-3x mb-3"></i>
+                    <p>No performance records found. Start by entering marks.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!-- Notifications Section -->
+{% if notifications %}
+<div class="card mb-4">
+    <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Important Notifications</h5>
+        <span class="badge bg-light text-purple">{{ notifications|length }} New</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for notif in notifications %}
+            <div class="list-group-item p-3 border-start border-4" 
+                 style="border-left-color: {{ notif.get_color() }} !important;">
+                <div class="d-flex align-items-start">
+                    <div class="me-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 45px; height: 45px; background: {{ notif.get_color() }}20; color: {{ notif.get_color() }};">
+                            <i class="{{ notif.get_icon() }}"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold">{{ notif.get_prefixed_title() }}</h6>
+                            <small class="text-muted">{{ notif.created_at.strftime('%d-%m-%Y') }}</small>
+                        </div>
+                        <p class="mb-1 text-muted">{{ notif.get_prefixed_message() }}</p>
+                        <small class="text-{{ notif.get_color_class() }}">
+                            <i class="far fa-clock me-1"></i>Valid until {{ notif.end_date.strftime('%d-%m-%Y') }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card-footer bg-white text-center">
+        <a href="{{ url_for('auth.notifications') }}" class="text-purple text-decoration-none">
+            View All Notifications <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+    </div>
+</div>
+{% else %}
+<div class="card mb-4">
+    <div class="card-body text-center py-4">
+        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+        <h6>No Notifications</h6>
+        <p class="text-muted mb-0">You're all caught up!</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
