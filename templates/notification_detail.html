@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Notification Details - SPAS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-header {
+        background: linear-gradient(120deg, #6f42c1, #9b59b6);
+        color: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(111, 66, 193, 0.22);
+    }
+    .detail-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 26px rgba(13, 18, 28, 0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-header mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h3 class="mb-1"><i class="fas fa-envelope-open-text me-2"></i>{{ notification.title }}</h3>
+        <div class="small opacity-75">
+            <span class="me-3"><i class="far fa-clock me-1"></i>{{ notification.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+            <span class="badge bg-light text-dark me-2">{{ notification.target_role|upper }}</span>
+            {% if notification.department %}<span class="badge bg-info text-dark">{{ notification.department }}</span>{% endif %}
+        </div>
+    </div>
+    <a href="{{ url_for('notifications.notifications_page') }}" class="btn btn-light">
+        <i class="fas fa-arrow-left me-1"></i>Back to Notifications
+    </a>
+</div>
+
+<div class="card detail-card">
+    <div class="card-body p-4">
+        <p class="mb-0" style="white-space: pre-line; line-height: 1.7;">{{ notification.message }}</p>
+    </div>
+</div>
+{% endblock %}
